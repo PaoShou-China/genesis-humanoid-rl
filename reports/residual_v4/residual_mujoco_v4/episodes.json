@@ -1,0 +1,32 @@
+[
+  {
+    "episode": 0,
+    "success": 1,
+    "terminated": 0,
+    "duration_s": 19.999999999999794,
+    "max_tilt_rad": 0.06742919236421585,
+    "max_root_displacement_m": 0.09426780473752741,
+    "energy_j": 51.94828039163347,
+    "mean_linear_error_m_s": 0.0164176661874468,
+    "mean_yaw_error_rad_s": 0.007699201031103214,
+    "mean_actuator_saturation": 7.241379283368587e-05,
+    "push_exposed": false,
+    "impulse_magnitude_ns": 0.0,
+    "recovery_time_s": null
+  },
+  {
+    "episode": 1,
+    "success": 1,
+    "terminated": 0,
+    "duration_s": 19.999999999999794,
+    "max_tilt_rad": 0.11906878650188446,
+    "max_root_displacement_m": 0.1333160942450088,
+    "energy_j": 84.36420446420037,
+    "mean_linear_error_m_s": 0.03191931608896783,
+    "mean_yaw_error_rad_s": 0.013394147637442507,
+    "mean_actuator_saturation": 0.00014482758603990079,
+    "push_exposed": false,
+    "impulse_magnitude_ns": 0.0,
+    "recovery_time_s": null
+  }
+]

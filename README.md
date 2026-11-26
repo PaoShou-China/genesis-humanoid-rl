@@ -2,7 +2,7 @@
 
 Unitree G1 的强化学习与控制实验平台：**Genesis · GenesisLab · RSL-RL PPO**。
 
-当前是可运行的开发版。H1/H3默认采用已验证的固定PD标定（刚度×16、阻尼×4，力矩上限不变）；历史低增益配置仍可显式加载。训练、推扰、地形、随机化、动作处理和独立评价共用一条控制链；运动能力以真实完整 episode 验收，接口通过不代表策略收敛。最新接口与跨引擎结果见 [V3 验收](reports/transfer_v3/README.md)，站立标定见 [V2 实测](reports/V2_PROGRESS.md)，历史失败保留在 [初版验收](reports/ACCEPTANCE.md)。
+当前是可运行的开发版。H1/H3默认采用已验证的固定PD标定（刚度×16、阻尼×4，力矩上限不变）；历史低增益配置仍可显式加载。训练、推扰、地形、随机化、动作处理和独立评价共用一条控制链；运动能力以真实完整 episode 验收，接口通过不代表策略收敛。残差RL结果见 [V4 验收](reports/residual_v4/README.md)，跨引擎接口见 [V3 验收](reports/transfer_v3/README.md)，站立标定见 [V2 实测](reports/V2_PROGRESS.md)，历史失败保留在 [初版验收](reports/ACCEPTANCE.md)。
 
 ## 快速运行
 
@@ -41,10 +41,15 @@ ghrl train --task H2 --num-envs 2 --device cpu \
 | PPO + DR | `configs/tasks/h2_domain_randomized.yaml`：摩擦、躯干附加质量、PD参数 |
 | Soft safety penalty | `configs/tasks/h2_soft_safety.yaml` |
 | PD target shield | `configs/tasks/h2_shield.yaml`；区间不可行时明确记录 |
-| Residual feedback | `configs/tasks/h1_residual.yaml`；反馈位置目标 + 有界RL残差 |
+| Residual RL | `configs/tasks/h1_residual_rl.yaml` / `h3_residual_rl.yaml`；冻结PD基准 + 有界rad修正、零均值初始化、正则与消融 |
+| 历史 Residual feedback | `configs/tasks/h1_residual.yaml`；旧低增益踝反馈配置，保留复现 |
 | 校准 PD 参考 | `h1_stable_pd.yaml` / `h1_stiff_pd.yaml`；不提高力矩上限 |
 
 Shield 约束的是关节目标和名义 PD 力矩代理，不保证不跌倒，也不构成形式化安全证明。新增可选显式 PD、物理步命令延迟、96维本体观测与 MuJoCo 独立评价入口，见 [跨引擎迁移](docs/SIM2SIM.md)。真实执行器辨识、传感时延、独立惯量随机化、MBRL和全身模仿尚未实现。
+
+## 残差 RL
+
+新机制明确使用 `q_ref = q_base + Δq_RL`，默认每关节修正上限0.05 rad。PPO只训练修正网络；基础PD控制器固定。提供H1站立/H3抗扰配置、零均值初始化、小幅探索、残差与变化率惩罚，以及 `ghrl evaluate --disable-residual` 同条件消融。完整机制与命令见 [残差RL说明](docs/RESIDUAL_RL.md)。
 
 ## 成组实验
 

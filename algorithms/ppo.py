@@ -19,6 +19,10 @@ def runner_config(path: str | Path | None = None, *, seed: int = 0) -> dict:
             cfg.actor.hidden_dims = tuple(value)
         elif key == "critic_hidden_dims":
             cfg.critic.hidden_dims = tuple(value)
+        elif key == "zero_actor_output":
+            if type(value) is not bool:
+                raise ValueError("zero_actor_output must be boolean")
+            continue
         elif key == "init_std":
             if value <= 0:
                 raise ValueError("init_std must be positive")
@@ -31,7 +35,10 @@ def runner_config(path: str | Path | None = None, *, seed: int = 0) -> dict:
             raise ValueError(f"Unknown PPO field: {key}")
     if min(cfg.num_steps_per_env, cfg.max_iterations, cfg.save_interval) < 1:
         raise ValueError("Rollout length, iterations and save interval must be positive")
-    return asdict(cfg)
+    result = asdict(cfg)
+    if "zero_actor_output" in spec:
+        result["zero_actor_output"] = spec["zero_actor_output"]
+    return result
 
 
 def make_runner(env, cfg: dict, log_dir: str | None = None):
@@ -42,4 +49,23 @@ def make_runner(env, cfg: dict, log_dir: str | None = None):
     from genesislab.rl.vecenv_wrapper import RslRlVecEnvWrapper
 
     wrapped = RslRlVecEnvWrapper(env, clip_actions=cfg["clip_actions"])
-    return GenesisLabOnPolicyRunner(wrapped, deepcopy(cfg), log_dir, device=str(env.device))
+    native_cfg = deepcopy(cfg)
+    zero_output = native_cfg.pop("zero_actor_output", False)
+    runner = GenesisLabOnPolicyRunner(wrapped, native_cfg, log_dir, device=str(env.device))
+    if zero_output:
+        import torch
+
+        policy = runner.alg.get_policy()
+        head = [module for module in policy.mlp.modules() if isinstance(module, torch.nn.Linear)][
+            -1
+        ]
+        with torch.no_grad():
+            head.weight.zero_()
+            head.bias.zero_()
+        runner.initialization_report = {
+            "zero_actor_output": True,
+            "head_weight_max_abs": float(head.weight.detach().abs().max()),
+            "head_bias_max_abs": float(head.bias.detach().abs().max()),
+            "note": "Zero deterministic mean; stochastic exploration is still enabled during PPO",
+        }
+    return runner

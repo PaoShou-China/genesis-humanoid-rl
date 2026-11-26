@@ -17,6 +17,10 @@ class BenchmarkEnv(ManagerBasedRLEnv):
                 actuator.physics_tick = lambda: self._sim_step_counter
                 actuator.last_tick = self._sim_step_counter
         self.action_pipeline = ActionPipeline(self, spec)
+        import torch
+
+        self.previous_residual = torch.zeros(self.num_envs, 29, device=self.device)
+        self.last_residual_change = torch.zeros_like(self.previous_residual)
         self.last_projection = None
         self.last_push_force = None
         self.last_push_impulse = None
@@ -35,6 +39,9 @@ class BenchmarkEnv(ManagerBasedRLEnv):
 
     def _reset_idx(self, env_ids):
         super()._reset_idx(env_ids)
+        if hasattr(self, "previous_residual"):
+            self.previous_residual[env_ids] = 0
+            self.last_residual_change[env_ids] = 0
         sampled = [a for a in self.scene["robot"].actuators if hasattr(a, "delay")]
         # A single command-transport lag per robot, shared by all motor groups.
         # Keep this identical to the portable MuJoCo actuator contract.
@@ -46,5 +53,9 @@ class BenchmarkEnv(ManagerBasedRLEnv):
         import torch
 
         self.last_projection = self.action_pipeline(action.to(self.device))
+        correction = self.last_projection.residual_action
+        if correction is not None:
+            self.last_residual_change = correction - self.previous_residual
+            self.previous_residual.copy_(correction)
         self.last_push_impulse = torch.zeros(self.num_envs, 3, device=self.device)
         return super().step(self.last_projection.action)

@@ -80,6 +80,9 @@ def make_env_cfg(
             weight=-2.0,
         )
         cfg.rewards["joint_velocity"] = RewardTermCfg(func=rewards.joint_velocity, weight=-0.001)
+    if spec.get("residual") is not None:
+        cfg.rewards["residual_position"] = RewardTermCfg(func=rewards.residual_position, weight=0.0)
+        cfg.rewards["residual_rate"] = RewardTermCfg(func=rewards.residual_rate, weight=0.0)
     if spec.get("reward_profile") == "survival":
         cfg.rewards["alive"] = RewardTermCfg(func=rewards.alive, weight=2.0)
         cfg.rewards["fall"] = RewardTermCfg(func=rewards.fall, weight=-50.0)

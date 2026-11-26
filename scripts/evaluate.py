@@ -20,6 +20,11 @@ def main() -> None:
     )
     parser.add_argument("--checkpoint", type=Path)
     parser.add_argument("--agent", choices=["trained", "zero", "feedback"], default="trained")
+    parser.add_argument(
+        "--disable-residual",
+        action="store_true",
+        help="Ablate explicit residual correction, preserving the same base controller",
+    )
     parser.add_argument("--seed", type=int, default=1000)
     parser.add_argument("--episodes", type=int, default=64)
     parser.add_argument("--num-envs", type=int, default=16)
@@ -57,10 +62,17 @@ def main() -> None:
             parser.error(
                 "Checkpoint already provides task.json; use --evaluation-config for physical overrides"
             )
+    if args.disable_residual:
+        if "residual" not in spec:
+            parser.error("--disable-residual requires an explicit residual configuration")
+        spec["residual"] = dict(spec["residual"], enabled=False)
     if args.agent == "feedback":
         if spec.get("controller", {}).get("type") != "ankle_feedback":
             parser.error("Feedback agent requires an ankle_feedback controller in --task-config")
-        spec["controller"]["residual_scale"] = 0.0
+        if "residual" in spec:
+            spec["residual"] = dict(spec["residual"], enabled=False)
+        else:
+            spec["controller"]["residual_scale"] = 0.0
     if args.evaluation_config:
         overrides = read_yaml(args.evaluation_config)
         allowed = {
@@ -189,6 +201,16 @@ def main() -> None:
                             root_quat_wxyz=env.scene["robot"].data.root_quat_w[0].cpu().tolist(),
                             command=commands[0].cpu().tolist(),
                             applied_action=env.last_projection.action[0].cpu().tolist(),
+                            baseline_action=(
+                                env.last_projection.baseline_action[0].cpu().tolist()
+                                if env.last_projection.baseline_action is not None
+                                else None
+                            ),
+                            requested_residual_action=(
+                                env.last_projection.residual_action[0].cpu().tolist()
+                                if env.last_projection.residual_action is not None
+                                else None
+                            ),
                             joint_pos_rad=env.scene["robot"].data.joint_pos[0].cpu().tolist(),
                             foot_contact=env.scene["feet_contact"]
                             .data.in_contact[0]

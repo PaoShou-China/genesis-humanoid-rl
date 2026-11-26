@@ -63,6 +63,8 @@ def main() -> None:
         )
         write_json(out / "robot.json", validate_robot(env))
         runner = make_runner(env, cfg, str(out))
+        if hasattr(runner, "initialization_report"):
+            write_json(out / "initialization.json", runner.initialization_report)
         if args.resume:
             runner.load(str(args.resume), map_location=str(env.device))
         runner.learn(num_learning_iterations=cfg["max_iterations"], init_at_random_ep_len=True)

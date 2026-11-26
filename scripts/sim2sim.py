@@ -57,6 +57,7 @@ def main():
     )
     source.add_argument("--task-config", type=Path, help="Zero-residual PD reference")
     parser.add_argument("--mjcf", type=Path)
+    parser.add_argument("--disable-residual", action="store_true")
     parser.add_argument("--episodes", type=int, default=8)
     parser.add_argument("--seed", type=int, default=1200)
     parser.add_argument("--output", type=Path, required=True)
@@ -86,6 +87,10 @@ def main():
         cfg = read_yaml(args.task_config)
         contract = control_contract(task_config(cfg["task"], args.task_config))
         policy = lambda obs: torch.zeros(1, 29)  # noqa: E731
+    if args.disable_residual:
+        if "residual" not in contract["task"]:
+            parser.error("--disable-residual requires a residual control contract")
+        contract["task"]["residual"] = dict(contract["task"]["residual"], enabled=False)
     controller = PortableController(contract)
     spec, values = contract["task"], controller.values
     if spec.get("actuator", {}).get("mode", "implicit") != "explicit_pd":

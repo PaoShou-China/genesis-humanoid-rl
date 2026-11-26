@@ -1,0 +1,38 @@
+{
+  "runs": [
+    {
+      "run": "outputs/residual_enabled_v4",
+      "method": "residual",
+      "training_seed": 0,
+      "checkpoint": "f82bd2d0333c88e2dab6f1f48a69a33339ae62b59449fd8c04aa7ddec29cc81c",
+      "success_rate": 1,
+      "fall_rate": 0,
+      "linear_error_m_s": 0.01973552000708878
+    },
+    {
+      "run": "outputs/residual_disabled_v4",
+      "method": "base_only",
+      "training_seed": 0,
+      "checkpoint": "f82bd2d0333c88e2dab6f1f48a69a33339ae62b59449fd8c04aa7ddec29cc81c",
+      "success_rate": 1,
+      "fall_rate": 0,
+      "linear_error_m_s": 0.019094673567451537
+    }
+  ],
+  "n_runs": 2,
+  "methods": {
+    "residual": {
+      "n_training_seeds": 1,
+      "mean_success_rate": 1,
+      "median_success_rate": 1,
+      "std_success_rate": null
+    },
+    "base_only": {
+      "n_training_seeds": 1,
+      "mean_success_rate": 1,
+      "median_success_rate": 1,
+      "std_success_rate": null
+    }
+  },
+  "note": "Run rows only. Group by method and independent training seed before statistical inference."
+}

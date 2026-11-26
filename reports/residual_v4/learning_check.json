@@ -1,0 +1,8 @@
+{
+  "initial_head_max_abs": 0.0,
+  "trained_head_max_abs": 0.037281591445207596,
+  "transitions": 6400,
+  "training_seeds": 1,
+  "iterations": 100,
+  "performance_improvement_claimed": false
+}

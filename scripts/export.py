@@ -64,6 +64,7 @@ def main() -> None:
             else None,
             "hardware_validated": False,
             "controller": task.get("controller", {}),
+            "residual": task.get("residual"),
             "shield": task.get("shield", {}),
             "postprocessing_required": bool(task.get("controller") or task.get("shield")),
             "action_clip": cfg["clip_actions"],

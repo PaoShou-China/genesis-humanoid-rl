@@ -42,7 +42,16 @@ def measure(env, commands: torch.Tensor) -> dict[str, torch.Tensor]:
         if explicit
         else zeros
     )
+    residual = projection.residual_action if projection else None
+    effective = projection.effective_residual_action if projection else None
+    scale = getattr(env, "benchmark_spec", {}).get("action_scale", 1.0)
     return {
+        "residual_requested_rad": residual.abs().amax(-1) * scale
+        if residual is not None
+        else zeros,
+        "residual_effective_rad": effective.abs().amax(-1) * scale
+        if effective is not None
+        else zeros,
         "linear_error_m_s": (data.root_lin_vel_b[:, :2] - commands[:, :2]).norm(dim=-1),
         "yaw_error_rad_s": (data.root_ang_vel_b[:, 2] - commands[:, 2]).abs(),
         "tilt_rad": torch.acos((-data.projected_gravity_b[:, 2]).clamp(-1, 1)),

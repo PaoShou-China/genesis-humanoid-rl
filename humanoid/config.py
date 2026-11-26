@@ -53,6 +53,7 @@ def validate_task(cfg: dict[str, Any], task: str | None = None) -> dict[str, Any
         "actuator",
         "timing",
         "actor_observation",
+        "residual",
     }
     unknown = set(cfg) - allowed
     if unknown:
@@ -138,7 +139,7 @@ def validate_task(cfg: dict[str, Any], task: str | None = None) -> dict[str, Any
     controller = cfg.get("controller", {})
     if set(controller) - {"type", "kp", "kd", "ankle_bias_rad", "knee_bias_rad", "residual_scale"}:
         raise ValueError("Unsupported controller field")
-    if controller.get("type", "none") not in ("none", "ankle_feedback"):
+    if controller.get("type", "none") not in ("none", "nominal_pose", "ankle_feedback"):
         raise ValueError("Unknown base controller")
     if not 0 <= controller.get("residual_scale", 1.0) <= 1:
         raise ValueError("residual_scale must be between zero and one")
@@ -146,6 +147,34 @@ def validate_task(cfg: dict[str, Any], task: str | None = None) -> dict[str, Any
         raise ValueError("Controller parameters must be finite")
     if any(controller.get(k, 0) < 0 for k in ("kp", "kd")):
         raise ValueError("Feedback gains must be nonnegative")
+    residual = cfg.get("residual")
+    if residual is not None:
+        if cfg["action_clip"] != 1.0:
+            raise ValueError("Explicit residual policy uses normalized [-1, 1] actions")
+        if set(residual) - {"max_position_rad", "joint_names", "enabled"}:
+            raise ValueError("Unknown residual field")
+        budget = residual.get("max_position_rad", 0)
+        if not math.isfinite(budget) or not 0 < budget <= cfg["action_scale"] * cfg["action_clip"]:
+            raise ValueError("Residual position budget must be positive and within action range")
+        if controller.get("type") not in ("nominal_pose", "ankle_feedback"):
+            raise ValueError("Residual RL requires an explicit base controller")
+        if controller.get("residual_scale", 1.0) != 1.0:
+            raise ValueError("Use max_position_rad instead of legacy residual_scale")
+        if type(residual.get("enabled", True)) is not bool:
+            raise ValueError("Residual enabled must be boolean")
+        if "joint_names" in residual:
+            names = residual["joint_names"]
+            audited = {
+                j["name"] for j in read_yaml(ROOT / "configs/robots/g1_29dof.yaml")["joints"]
+            }
+            if (
+                not isinstance(names, list)
+                or not names
+                or any(not isinstance(n, str) for n in names)
+                or len(set(names)) != len(names)
+                or set(names) - audited
+            ):
+                raise ValueError("Residual joint_names must be unique audited G1 joints")
     if set(cfg.get("shield", {})) - {"type"}:
         raise ValueError("Unknown shield field")
     if cfg.get("shield", {}).get("type", "none") not in ("none", "pd_target"):

@@ -27,6 +27,9 @@ class Projection:
     action: torch.Tensor
     intervention: torch.Tensor
     infeasible: torch.Tensor
+    baseline_action: torch.Tensor | None = None
+    residual_action: torch.Tensor | None = None
+    effective_residual_action: torch.Tensor | None = None
 
 
 def project_pd_target(action, *, q, dq, home, limits, kp, kd, effort, scale, clip) -> Projection:
@@ -85,22 +88,33 @@ def process_action(
     action, *, spec, q, dq, home, limits, gravity, angular_velocity, joint_names, kp, kd, effort
 ):
     """Shared Genesis/MuJoCo control composition; contains no simulator calls."""
+    if not torch.isfinite(action).all():
+        raise FloatingPointError("Policy produced a non-finite action")
     ctrl = spec.get("controller", {})
+    residual = spec.get("residual")
+    baseline = torch.zeros_like(action)
     if ctrl.get("type") == "ankle_feedback":
-        action = (
-            ankle_feedback(
-                gravity,
-                angular_velocity,
-                joint_names,
-                ctrl,
-                spec["action_scale"],
-            )
-            + ctrl.get("residual_scale", 1.0) * action
+        baseline = ankle_feedback(
+            gravity,
+            angular_velocity,
+            joint_names,
+            ctrl,
+            spec["action_scale"],
         )
+        if residual is None:
+            action = baseline + ctrl.get("residual_scale", 1.0) * action
+    if residual is not None:
+        correction = action.clamp(-1, 1) * residual["max_position_rad"] / spec["action_scale"]
+        if "joint_names" in residual:
+            mask = action.new_tensor([name in residual["joint_names"] for name in joint_names])
+            correction = correction * mask
+        if not residual.get("enabled", True):
+            correction = torch.zeros_like(correction)
+        action = baseline + correction
     if not torch.isfinite(action).all():
         raise FloatingPointError("Policy produced a non-finite action")
     if spec.get("shield", {}).get("type") == "pd_target":
-        return project_pd_target(
+        result = project_pd_target(
             action,
             q=q,
             dq=dq,
@@ -112,6 +126,26 @@ def process_action(
             scale=spec["action_scale"],
             clip=spec["action_clip"],
         )
-    applied = action.clamp(-spec["action_clip"], spec["action_clip"])
-    flags = torch.zeros(action.shape[0], dtype=torch.bool, device=action.device)
-    return Projection(applied, (applied - action).abs().amax(-1) > 1e-6, flags)
+        if residual is not None:
+            baseline = project_pd_target(
+                baseline,
+                q=q,
+                dq=dq,
+                home=home,
+                limits=limits,
+                kp=kp,
+                kd=kd,
+                effort=effort,
+                scale=spec["action_scale"],
+                clip=spec["action_clip"],
+            ).action
+    else:
+        applied = action.clamp(-spec["action_clip"], spec["action_clip"])
+        flags = torch.zeros(action.shape[0], dtype=torch.bool, device=action.device)
+        result = Projection(applied, (applied - action).abs().amax(-1) > 1e-6, flags)
+        baseline = baseline.clamp(-spec["action_clip"], spec["action_clip"])
+    if residual is not None:
+        result.baseline_action = baseline
+        result.residual_action = correction
+        result.effective_residual_action = result.action - baseline
+    return result

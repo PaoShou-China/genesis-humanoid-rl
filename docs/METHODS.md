@@ -11,3 +11,8 @@ V0.2：Nominal PPO vs PPO+DR，在同分布和预先封存的OOD分布评价；V
 ## 当前扩展
 
 已接入PPO+DR、soft joint-limit penalty、PD目标shield、踝关节反馈位置目标与RL残差；见 [EXTENSIONS.md](EXTENSIONS.md)。它们具备真实可执行路径，但没有据接口烟测宣称算法优越性。默认站姿PD控制器已进行固定增益扫描，所有effort limit保持不变。
+
+
+## 显式残差RL机制
+
+新的冻结基准、有界rad修正、零均值初始化、正则与消融流程见 [RESIDUAL_RL.md](RESIDUAL_RL.md)。旧 controller.residual_scale 配置保留原语义；新 residual 字段不允许与旧缩放混用。

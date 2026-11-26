@@ -1,0 +1,19 @@
+{
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "packages": {
+    "torch": "2.15.0+cpu",
+    "genesis-world": "1.3.3",
+    "genesislab": "0.1.0",
+    "rsl-rl-lib": "5.4.1",
+    "tensordict": "0.15.6",
+    "numpy": "2.5.5"
+  },
+  "cuda_build": null,
+  "cuda_available": false,
+  "gpu_names": [],
+  "git_commit": "e826871ddc4b1cd714f76790bf8455e83a109c96",
+  "git_dirty": true,
+  "genesislab_commit": "e06f383af31773fc748b1a72b5268bd84b26eb2a",
+  "source_snapshot_sha256": "0081a77cbf03c63a3e79a9a197d790a7f588e48f34f36f8500cba284a621f610"
+}

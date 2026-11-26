@@ -33,3 +33,17 @@ def joint_limits(env) -> torch.Tensor:
         (limits[..., 0] - data.joint_pos).clamp(min=0).square()
         + (data.joint_pos - limits[..., 1]).clamp(min=0).square()
     ).sum(-1)
+
+
+def residual_position(env):
+    """Requested residual squared norm in rad², before shield/target clipping."""
+    projection = getattr(env, "last_projection", None)
+    if projection is None or projection.residual_action is None:
+        return torch.zeros(env.num_envs, device=env.device)
+    return (projection.residual_action * env.benchmark_spec["action_scale"]).square().sum(-1)
+
+
+def residual_rate(env):
+    """Squared requested residual slew in rad²/s²; reset clears previous state."""
+    delta = env.last_residual_change * env.benchmark_spec["action_scale"] / env.step_dt
+    return delta.square().sum(-1)
