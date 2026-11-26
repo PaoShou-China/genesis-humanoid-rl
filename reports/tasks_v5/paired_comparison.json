@@ -1,0 +1,38 @@
+{
+  "runs": [
+    {
+      "run": "outputs/tasks_v5_eval_h6",
+      "method": "residual",
+      "training_seed": 0,
+      "checkpoint": "e7bb7121f8a7029344eeae712546b587adc37cb4cec6d35ed842dd22788b5cba",
+      "success_rate": 0,
+      "fall_rate": 0,
+      "linear_error_m_s": 0.31183061003685
+    },
+    {
+      "run": "outputs/tasks_v5_eval_h6_base",
+      "method": "base",
+      "training_seed": 0,
+      "checkpoint": "e7bb7121f8a7029344eeae712546b587adc37cb4cec6d35ed842dd22788b5cba",
+      "success_rate": 0,
+      "fall_rate": 0,
+      "linear_error_m_s": 0.3118775635957718
+    }
+  ],
+  "n_runs": 2,
+  "methods": {
+    "residual": {
+      "n_training_seeds": 1,
+      "mean_success_rate": 0,
+      "median_success_rate": 0,
+      "std_success_rate": null
+    },
+    "base": {
+      "n_training_seeds": 1,
+      "mean_success_rate": 0,
+      "median_success_rate": 0,
+      "std_success_rate": null
+    }
+  },
+  "note": "Run rows only. Group by method and independent training seed before statistical inference."
+}

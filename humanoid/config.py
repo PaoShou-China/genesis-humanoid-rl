@@ -6,8 +6,9 @@ import math
 
 import yaml
 
+from humanoid.task_catalog import TASKS, CUSTOM_TASKS
+
 ROOT = Path(__file__).resolve().parents[1]
-TASKS = {"H1": "h1_stiff_pd", "H2": "h2_velocity", "H3": "h3_stiff_pd", "H4": "h4_terrain"}
 
 
 def read_yaml(path: str | Path) -> dict[str, Any]:
@@ -54,6 +55,7 @@ def validate_task(cfg: dict[str, Any], task: str | None = None) -> dict[str, Any
         "timing",
         "actor_observation",
         "residual",
+        "objective",
     }
     unknown = set(cfg) - allowed
     if unknown:
@@ -74,14 +76,58 @@ def validate_task(cfg: dict[str, Any], task: str | None = None) -> dict[str, Any
     if any(not math.isfinite(value) for value in cfg["rewards"].values()):
         raise ValueError("Reward weights must be finite")
     expected_success = (
-        {"max_tilt_rad", "max_root_displacement_m"}
-        if task in ("H1", "H3")
-        else {"max_mean_linear_error_m_s", "max_mean_yaw_error_rad_s"}
+        {"tolerance", "hold_s"}
+        if task in CUSTOM_TASKS
+        else (
+            {"max_tilt_rad", "max_root_displacement_m"}
+            if task in ("H1", "H3")
+            else {"max_mean_linear_error_m_s", "max_mean_yaw_error_rad_s"}
+        )
     )
+    if task in ("H12", "H13"):
+        expected_success |= {"min_travel_m"}
     if set(cfg["success"]) != expected_success or any(
         not math.isfinite(value) or value <= 0 for value in cfg["success"].values()
     ):
         raise ValueError("Success thresholds must be positive and match the task")
+    objective = cfg.get("objective", {})
+    if task in CUSTOM_TASKS:
+        if objective.get("type") != CUSTOM_TASKS[task]:
+            raise ValueError("Objective type must match task identity")
+        required = {
+            "motion": {"motion_file"},
+            "heading": {"heading_range_rad"},
+            "waypoint": {"distance_m"},
+            "height": {"height_range_m"},
+            "reach": {"target_offset_m"},
+            "getup": {"upright_height_m"},
+            "jump": {"apex_height_m", "minimum_flight_height_m"},
+            "object_push": {"distance_m"},
+        }[objective["type"]]
+        if set(objective) - required - {"type", "reward_width"} or required - set(objective):
+            raise ValueError("Missing or unknown objective parameters")
+        for name, value in objective.items():
+            if name == "type":
+                continue
+            if name == "motion_file":
+                if not isinstance(value, str) or not value:
+                    raise ValueError("motion_file must be a path string")
+            elif name in ("height_range_m", "heading_range_rad"):
+                if (
+                    not isinstance(value, (list, tuple))
+                    or len(value) != 2
+                    or not all(math.isfinite(v) for v in value)
+                    or value[0] > value[1]
+                ):
+                    raise ValueError("Objective ranges must be finite and ordered")
+                if name == "height_range_m" and value[0] < 0.4:
+                    raise ValueError("Height targets must exceed the fall threshold")
+            elif not math.isfinite(value) or value <= 0:
+                raise ValueError("Objective scalars must be finite and positive")
+        if cfg["success"]["hold_s"] > cfg["episode_length_s"]:
+            raise ValueError("Success hold exceeds episode duration")
+    elif objective:
+        raise ValueError("Objective requires a goal-conditioned task ID")
     reset = cfg.get("reset_joint_range", [-0.1, 0.1])
     if len(reset) != 2 or not all(math.isfinite(v) for v in reset) or reset[0] > reset[1]:
         raise ValueError("Invalid joint reset range")
@@ -179,7 +225,7 @@ def validate_task(cfg: dict[str, Any], task: str | None = None) -> dict[str, Any
         raise ValueError("Unknown shield field")
     if cfg.get("shield", {}).get("type", "none") not in ("none", "pd_target"):
         raise ValueError("Unknown shield")
-    if cfg.get("terrain", "flat") not in ("flat", "rough"):
+    if cfg.get("terrain", "flat") not in ("flat", "rough", "stairs", "slope"):
         raise ValueError("Unknown terrain")
     if "push" in cfg:
         push = cfg["push"]

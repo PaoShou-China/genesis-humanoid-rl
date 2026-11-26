@@ -23,8 +23,38 @@ def make_env_cfg(
     if num_envs < 1:
         raise ValueError("num_envs must be positive")
     spec = validate_task(config, task) if config else task_config(task)
-    factory = g1_rough_env_cfg if spec.get("terrain") == "rough" else g1_flat_env_cfg
+    from humanoid.task_catalog import CUSTOM_TASKS
+    from humanoid import task_objectives
+
+    if task == "H5":
+        task_objectives.require_motion(spec)
+    factory = g1_rough_env_cfg if spec.get("terrain", "flat") != "flat" else g1_flat_env_cfg
     cfg = factory(play=evaluation, num_envs=num_envs)
+    if spec.get("terrain") in ("stairs", "slope"):
+        from genesislab.terrains import TerrainCfg
+
+        kind = "pyramid_stairs_terrain" if spec["terrain"] == "stairs" else "pyramid_sloped_terrain"
+        parameters = (
+            {"step_width": 0.4, "step_height": 0.06}
+            if spec["terrain"] == "stairs"
+            else {"slope": 0.15}
+        )
+        cfg.scene.terrain = TerrainCfg(
+            n_subterrains=(1, 1),
+            subterrain_size=(12.0, 12.0),
+            subterrain_types=kind,
+            subterrain_parameters={kind: parameters},
+            randomize=False,
+        )
+        cfg.curriculum = {}
+    if task == "H14":
+        import genesis as gs
+        from genesislab.entity import EntityCfg
+
+        cfg.scene.entities["object"] = EntityCfg(
+            morph=lambda: gs.morphs.Box(size=(0.25, 0.25, 0.25), pos=(0.7, 0.0, 0.125)),
+            material=gs.materials.Rigid(rho=100.0),
+        )
     cfg.seed = seed
     cfg.episode_length_s = spec["episode_length_s"]
     cfg.actions["joint_pos"].scale = spec["action_scale"]
@@ -80,6 +110,23 @@ def make_env_cfg(
             weight=-2.0,
         )
         cfg.rewards["joint_velocity"] = RewardTermCfg(func=rewards.joint_velocity, weight=-0.001)
+    if task in CUSTOM_TASKS:
+        from genesislab.managers import ObservationTermCfg
+
+        for group in cfg.observations.values():
+            group.terms["task_goal"] = ObservationTermCfg(func=task_objectives.goal_observation)
+        command.rel_standing_envs = 1.0
+        cfg.rewards["task_objective"] = RewardTermCfg(
+            func=task_objectives.objective_reward, weight=5.0
+        )
+        for key in ("track_lin_vel_xy", "track_ang_vel_z", "feet_air_time", "joint_deviation"):
+            cfg.rewards[key].weight = 0.0
+        if task in ("H8", "H10", "H11"):
+            cfg.rewards.pop("base_height", None)
+        if task == "H10":
+            cfg.terminations.pop("base_too_low", None)
+            cfg.terminations.pop("bad_orientation", None)
+            cfg.rewards["flat_orientation"].weight = -0.2
     if spec.get("residual") is not None:
         cfg.rewards["residual_position"] = RewardTermCfg(func=rewards.residual_position, weight=0.0)
         cfg.rewards["residual_rate"] = RewardTermCfg(func=rewards.residual_rate, weight=0.0)

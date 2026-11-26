@@ -2,7 +2,7 @@
 
 Unitree G1 的强化学习与控制实验平台：**Genesis · GenesisLab · RSL-RL PPO**。
 
-当前是可运行的开发版。H1/H3默认采用已验证的固定PD标定（刚度×16、阻尼×4，力矩上限不变）；历史低增益配置仍可显式加载。训练、推扰、地形、随机化、动作处理和独立评价共用一条控制链；运动能力以真实完整 episode 验收，接口通过不代表策略收敛。残差RL结果见 [V4 验收](reports/residual_v4/README.md)，跨引擎接口见 [V3 验收](reports/transfer_v3/README.md)，站立标定见 [V2 实测](reports/V2_PROGRESS.md)，历史失败保留在 [初版验收](reports/ACCEPTANCE.md)。
+当前是可运行的开发版。H1/H3默认采用已验证的固定PD标定（刚度×16、阻尼×4，力矩上限不变）；历史低增益配置仍可显式加载。训练、推扰、地形、随机化、动作处理和独立评价共用一条控制链；运动能力以真实完整 episode 验收，接口通过不代表策略收敛。任务集验收见 [V5 报告](reports/tasks_v5/README.md)，残差RL结果见 [V4 验收](reports/residual_v4/README.md)，跨引擎接口见 [V3 验收](reports/transfer_v3/README.md)，站立标定见 [V2 实测](reports/V2_PROGRESS.md)，历史失败保留在 [初版验收](reports/ACCEPTANCE.md)。
 
 ## 快速运行
 
@@ -27,13 +27,17 @@ ghrl train --task H2 --num-envs 2 --device cpu \
 
 ## 任务与方法
 
-| 任务 | 实现范围 | 验证边界 |
-|---|---|---|
-| H1 Standing | 29 DoF、站立姿态、独立完整 episode 评价 | PD 增益扫描及初始扰动评价；PPO另行验收 |
-| H2 Velocity | vx / vy / wz 指令、PPO训练和评估 | 已执行训练；尚未获得可靠行走基线 |
-| H3 Push recovery | 躯干 CoM 处施加世界系真实外力，记录冲量与恢复 | 没受到推扰的 episode 不计算为恢复成功 |
-| H4 Rough terrain | 上游真实地形、课程、123维 actor 观测 | 真实步进与PPO烟测通过；不宣称地形通过率 |
-| H5 Motion | 真实 NPZ 的频率、关节/刚体命名、形状和四元数校验 | 尚未实现动作跟踪策略，不生成假示教数据 |
+已注册H1–H14，完整MDP、成功判据与数据依赖见 [任务集](docs/TASK_SUITE.md)。
+
+| 任务 | 环境范围 |
+|---|---|
+| H1–H4 | 站立、速度跟踪、真实推扰恢复、粗糙地形 |
+| H5 | 参考关节动作跟踪；需要真实命名NPZ，缺失明确报错 |
+| H6–H9 | 朝向、航点、蹲起高度、双手触达 |
+| H10–H11 | 俯卧/仰卧起身、跳跃与落地 |
+| H12–H14 | 真实楼梯、坡面、接触推动自由刚体 |
+
+新增九类无外部数据任务完成真实步进及两轮PPO烟测；不宣称策略学会任务。抓取/搬运仍需可动夹爪资产，不以刚性附着冒充。目标观测尚未接入MuJoCo/实机，raw actor导出会明确标记。
 
 | 对照/方法 | 配置或入口 |
 |---|---|
@@ -45,7 +49,9 @@ ghrl train --task H2 --num-envs 2 --device cpu \
 | 历史 Residual feedback | `configs/tasks/h1_residual.yaml`；旧低增益踝反馈配置，保留复现 |
 | 校准 PD 参考 | `h1_stable_pd.yaml` / `h1_stiff_pd.yaml`；不提高力矩上限 |
 
-Shield 约束的是关节目标和名义 PD 力矩代理，不保证不跌倒，也不构成形式化安全证明。新增可选显式 PD、物理步命令延迟、96维本体观测与 MuJoCo 独立评价入口，见 [跨引擎迁移](docs/SIM2SIM.md)。真实执行器辨识、传感时延、独立惯量随机化、MBRL和全身模仿尚未实现。
+Shield 约束的是关节目标和名义 PD 力矩代理，不保证不跌倒，也不构成形式化安全证明。新增可选显式 PD、物理步命令延迟、96维本体观测与 MuJoCo 独立评价入口，见 [跨引擎迁移](docs/SIM2SIM.md)。真实执行器辨识、传感时延、独立惯量随机化、MBRL和完整全身运动模仿尚未实现。
+
+训练入口支持 `--method ppo` / `--method residual`，目标任务、物理条件与评价协议独立于方法。
 
 ## 残差 RL
 
@@ -73,6 +79,7 @@ ghrl evaluate --task H2 --checkpoint <run>/model_final.pt \
 - `ghrl videos`：相同测试条件的视频并排比较；短视频结束后明确标注冻结帧。
 - `ghrl compare`：验证物理协议与命令序列；按独立训练seed汇总，拒绝重复seed伪增样本。
 - `ghrl export`：导出原始actor与归一化；平地任务另存控制契约，残差/动作过滤由共用 PortableController 执行。
+- `ghrl task_smoke`：逐任务验证reset、部分reset、真实步进和可选两轮PPO。
 - `ghrl sim2sim`：在真实 MuJoCo 中评价显式 PD 或导出策略；不自动调参，不宣称真机迁移。
 - `ghrl transfer_plan`：生成固定控制周期的增益/步长/延迟诊断矩阵；不自动启动长实验。
 

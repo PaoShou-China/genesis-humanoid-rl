@@ -1,0 +1,78 @@
+{
+  "runs": [
+    {
+      "task": "H6",
+      "actor": 98,
+      "critic": 111,
+      "real_physics_smoke": true,
+      "ppo_iterations": 2,
+      "convergence_claimed": false
+    },
+    {
+      "task": "H7",
+      "actor": 98,
+      "critic": 111,
+      "real_physics_smoke": true,
+      "ppo_iterations": 2,
+      "convergence_claimed": false
+    },
+    {
+      "task": "H8",
+      "actor": 99,
+      "critic": 112,
+      "real_physics_smoke": true,
+      "ppo_iterations": 2,
+      "convergence_claimed": false
+    },
+    {
+      "task": "H9",
+      "actor": 102,
+      "critic": 115,
+      "real_physics_smoke": true,
+      "ppo_iterations": 2,
+      "convergence_claimed": false
+    },
+    {
+      "task": "H10",
+      "actor": 97,
+      "critic": 110,
+      "real_physics_smoke": true,
+      "ppo_iterations": 2,
+      "convergence_claimed": false
+    },
+    {
+      "task": "H11",
+      "actor": 99,
+      "critic": 112,
+      "real_physics_smoke": true,
+      "ppo_iterations": 2,
+      "convergence_claimed": false
+    },
+    {
+      "task": "H12",
+      "actor": 123,
+      "critic": 133,
+      "real_physics_smoke": true,
+      "ppo_iterations": 2,
+      "convergence_claimed": false
+    },
+    {
+      "task": "H13",
+      "actor": 123,
+      "critic": 133,
+      "real_physics_smoke": true,
+      "ppo_iterations": 2,
+      "convergence_claimed": false
+    },
+    {
+      "task": "H14",
+      "actor": 101,
+      "critic": 114,
+      "real_physics_smoke": true,
+      "ppo_iterations": 2,
+      "convergence_claimed": false
+    }
+  ],
+  "motion_task": "requires external NPZ; not run",
+  "hardware_validated": false
+}

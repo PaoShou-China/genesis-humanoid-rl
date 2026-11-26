@@ -8,6 +8,10 @@ from humanoid.control import process_action
 def control_contract(spec, robot=None):
     """Record controller decisions separately from simulator-specific physics."""
     validate_task(spec)
+    if spec.get("objective"):
+        raise ValueError(
+            "Goal-conditioned tasks require a dedicated deployment observation adapter"
+        )
     if spec.get("terrain", "flat") != "flat":
         raise ValueError("Deployment contract currently supports flat tasks only")
     asset = read_yaml(ROOT / "configs/robots/g1_29dof.yaml")

@@ -45,7 +45,7 @@ def measure(env, commands: torch.Tensor) -> dict[str, torch.Tensor]:
     residual = projection.residual_action if projection else None
     effective = projection.effective_residual_action if projection else None
     scale = getattr(env, "benchmark_spec", {}).get("action_scale", 1.0)
-    return {
+    result = {
         "residual_requested_rad": residual.abs().amax(-1) * scale
         if residual is not None
         else zeros,
@@ -74,3 +74,9 @@ def measure(env, commands: torch.Tensor) -> dict[str, torch.Tensor]:
         "shield_infeasible": projection.infeasible.float() if projection else zeros,
         "external_force_n": push.norm(dim=-1) if push is not None else zeros,
     }
+
+    if hasattr(env, "task_objective"):
+        from humanoid.task_objectives import objective_metrics
+
+        result.update(objective_metrics(env))
+    return result

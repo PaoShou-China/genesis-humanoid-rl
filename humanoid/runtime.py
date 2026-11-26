@@ -10,8 +10,8 @@ class BenchmarkEnv(ManagerBasedRLEnv):
     """Preserve upstream reset/step contracts without copying its simulator loop."""
 
     def __init__(self, cfg, *, spec, **kwargs):
-        super().__init__(cfg, **kwargs)
         self.benchmark_spec = spec
+        super().__init__(cfg, **kwargs)
         for actuator in self.scene["robot"].actuators:
             if hasattr(actuator, "physics_tick"):
                 actuator.physics_tick = lambda: self._sim_step_counter
@@ -39,6 +39,8 @@ class BenchmarkEnv(ManagerBasedRLEnv):
 
     def _reset_idx(self, env_ids):
         super()._reset_idx(env_ids)
+        if hasattr(self, "task_objective"):
+            self.task_objective.reset(env_ids)
         if hasattr(self, "previous_residual"):
             self.previous_residual[env_ids] = 0
             self.last_residual_change[env_ids] = 0

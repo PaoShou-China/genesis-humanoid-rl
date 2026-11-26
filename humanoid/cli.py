@@ -19,6 +19,7 @@ COMMANDS = {
         "sim2sim",
         "transfer_plan",
         "transfer_summary",
+        "task_smoke",
     )
 }
 COMMANDS.update(
@@ -44,7 +45,8 @@ def main():
     if args.command is None:
         parser.print_help()
     elif args.command == "tasks":
-        print(
-            "H1  Standing balance\nH2  Velocity tracking\nH3  Torso-force push recovery\nH4  Rough-terrain locomotion"
-        )
-        print("H5  Motion dataset validation only; no trained tracker")
+        from humanoid.task_catalog import TASK_DEFINITIONS
+
+        for key, (_, name, _) in TASK_DEFINITIONS.items():
+            suffix = " [requires real NPZ; no trained tracker]" if key == "H5" else ""
+            print(f"{key:4s}{name}{suffix}")

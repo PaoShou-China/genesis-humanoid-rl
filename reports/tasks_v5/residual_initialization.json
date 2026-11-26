@@ -1,0 +1,6 @@
+{
+  "zero_actor_output": true,
+  "head_weight_max_abs": 0.0,
+  "head_bias_max_abs": 0.0,
+  "note": "Zero deterministic mean; stochastic exploration is still enabled during PPO"
+}

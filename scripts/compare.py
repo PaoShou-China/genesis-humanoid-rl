@@ -10,7 +10,11 @@ from statistics import mean, median, stdev
 def protocol_key(manifest, summary):
     """Use physical test identity; retain strict legacy comparison for old reports."""
     if "protocol_sha256" in manifest:
-        return [manifest["protocol_sha256"], manifest["command_plan_sha256"]]
+        return [
+            manifest["protocol_sha256"],
+            manifest["command_plan_sha256"],
+            manifest.get("goal_plan_sha256"),
+        ]
     return [
         manifest["task"],
         manifest["evaluation_seed"],

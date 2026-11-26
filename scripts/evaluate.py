@@ -6,6 +6,7 @@ from pathlib import Path
 
 from evaluation.statistics import summarize
 from humanoid.config import task_config, TASKS, read_yaml, validate_task
+from humanoid.task_catalog import CUSTOM_TASKS
 from humanoid.environments import make_env
 from humanoid.provenance import sha256, system_info, write_json, archive_source
 
@@ -98,7 +99,7 @@ def main() -> None:
     args.output.mkdir(parents=True, exist_ok=False)
     source_sha = archive_source(args.output)
     env = None
-    episodes, trace, plans = [], [], []
+    episodes, trace, plans, goals = [], [], [], []
     writer = None
     video_frames_written = 0
     training_seed = None
@@ -137,6 +138,10 @@ def main() -> None:
             while len(episodes) < args.episodes:
                 count = min(env.num_envs, args.episodes - len(episodes))
                 obs, _ = env.reset(seed=args.seed + batch)
+                if hasattr(env, "task_objective"):
+                    goals.append(
+                        {"seed": args.seed + batch, "goals": env.task_objective.goal.cpu().tolist()}
+                    )
                 active = torch.arange(env.num_envs, device=env.device) < count
                 initial = measure(env, env.command_manager.get_command("base_velocity"))
                 initial_com = torch.stack([initial["com_x_m"], initial["com_y_m"]], -1)
@@ -261,7 +266,10 @@ def main() -> None:
                         )
                         passed = bool(truncated[slot]) and not bool(terminated[slot])
                         limits = spec["success"]
-                        if args.task in ("H1", "H3"):
+                        if args.task in CUSTOM_TASKS:
+                            row["objective_success"] = int(env.task_objective.achieved[slot])
+                            passed &= bool(row["objective_success"])
+                        elif args.task in ("H1", "H3"):
                             passed &= row["max_tilt_rad"] <= limits["max_tilt_rad"]
                             passed &= (
                                 row["max_root_displacement_m"] <= limits["max_root_displacement_m"]
@@ -275,6 +283,8 @@ def main() -> None:
                             passed &= (
                                 row["mean_yaw_error_rad_s"] <= limits["max_mean_yaw_error_rad_s"]
                             )
+                        if args.task in ("H12", "H13"):
+                            passed &= row["max_root_displacement_m"] >= limits["min_travel_m"]
                         row["success"] = int(passed)
                         episodes.append(row)
                     active &= ~done
@@ -292,6 +302,7 @@ def main() -> None:
         write_json(args.output / "trace.json", trace)
         write_json(args.output / "summary.json", summarize(episodes))
         write_json(args.output / "commands.json", plans)
+        write_json(args.output / "goals.json", goals)
         protocol = physical_protocol(
             spec, seed=args.seed, num_envs=env.num_envs, episodes=args.episodes
         )
@@ -310,6 +321,7 @@ def main() -> None:
                 "protocol": protocol,
                 "protocol_sha256": fingerprint(protocol),
                 "command_plan_sha256": fingerprint(plans),
+                "goal_plan_sha256": fingerprint(goals),
                 "checkpoint_sha256": sha256(args.checkpoint) if args.checkpoint else None,
                 "checkpoint": str(args.checkpoint) if args.checkpoint else None,
                 "note": "First full episode per assigned slot; terminal states sampled before reset.",

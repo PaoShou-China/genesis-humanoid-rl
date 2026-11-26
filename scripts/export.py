@@ -43,7 +43,7 @@ def main() -> None:
         expected = actor(obs).cpu()
         actual = loaded(example.cpu())
         torch.testing.assert_close(actual, expected)
-    contract_available = task.get("terrain", "flat") == "flat"
+    contract_available = task.get("terrain", "flat") == "flat" and not task.get("objective")
     if contract_available:
         from humanoid.deployment import control_contract
 

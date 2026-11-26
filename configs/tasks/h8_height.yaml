@@ -1,0 +1,38 @@
+task: H8
+robot: g1_29dof
+episode_length_s: 10.0
+action_scale: 1.0
+action_clip: 1.0
+commands:
+  lin_vel_x:
+  - 0.0
+  - 0.0
+  lin_vel_y:
+  - 0.0
+  - 0.0
+  ang_vel_z:
+  - 0.0
+  - 0.0
+rewards:
+  task_objective: 5.0
+  flat_orientation: -0.5
+  action_rate: -0.005
+success:
+  tolerance: 0.04
+  hold_s: 0.5
+actuator:
+  mode: explicit_pd
+  delay_steps:
+  - 0
+  - 0
+timing:
+  physics_dt_s: 0.002
+  control_dt_s: 0.02
+  substeps: 1
+actor_observation: proprioceptive
+objective:
+  type: height
+  height_range_m:
+  - 0.5
+  - 0.75
+  reward_width: 0.15

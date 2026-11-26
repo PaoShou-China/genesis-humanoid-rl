@@ -18,6 +18,11 @@ def main() -> None:
     parser.add_argument("--task", choices=list(TASKS), default="H2")
     parser.add_argument("--task-config")
     parser.add_argument("--ppo-config")
+    parser.add_argument(
+        "--method",
+        choices=["ppo", "residual"],
+        help="Optional method preset; task physics and objective stay unchanged",
+    )
     parser.add_argument("--num-envs", type=int, default=4096)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--device", default="cuda:0")
@@ -31,7 +36,22 @@ def main() -> None:
     if args.device.startswith("cuda") and not torch.cuda.is_available():
         parser.error("CUDA is unavailable. Use --device cpu for a small smoke run.")
     spec = task_config(args.task, args.task_config)
-    cfg = runner_config(args.ppo_config, seed=args.seed)
+    if args.method == "residual":
+        spec.setdefault("controller", {"type": "nominal_pose"})
+        spec.setdefault("residual", {"max_position_rad": 0.05, "enabled": True})
+        spec["controller"].pop("residual_scale", None)
+        spec["rewards"].update(residual_position=-2.0, residual_rate=-0.001)
+    elif args.method == "ppo":
+        spec.pop("controller", None)
+        spec.pop("residual", None)
+        for key in ("residual_position", "residual_rate"):
+            spec["rewards"].pop(key, None)
+    ppo_path = args.ppo_config
+    if args.method == "residual" and ppo_path is None:
+        from humanoid.config import ROOT
+
+        ppo_path = ROOT / "configs/algorithms/ppo_residual.yaml"
+    cfg = runner_config(ppo_path, seed=args.seed)
     if cfg["clip_actions"] != spec["action_clip"]:
         parser.error("Runner and task action clipping must agree")
     if args.iterations is not None:
@@ -67,7 +87,10 @@ def main() -> None:
             write_json(out / "initialization.json", runner.initialization_report)
         if args.resume:
             runner.load(str(args.resume), map_location=str(env.device))
-        runner.learn(num_learning_iterations=cfg["max_iterations"], init_at_random_ep_len=True)
+        runner.learn(
+            num_learning_iterations=cfg["max_iterations"],
+            init_at_random_ep_len=not bool(spec.get("objective")),
+        )
         # Always save an explicit final checkpoint, including optimizer state.
         runner.save(str(out / "model_final.pt"))
         write_json(

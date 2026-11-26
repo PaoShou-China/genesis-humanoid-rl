@@ -5,9 +5,11 @@ import pytest
 from humanoid.config import task_config
 
 
-def test_unsupported_motion_tracking_is_explicit():
-    with pytest.raises(ValueError, match="not implemented"):
-        task_config("H5")
+def test_motion_tracking_requires_external_data():
+    from humanoid.task_objectives import require_motion
+
+    with pytest.raises(FileNotFoundError, match="actual motion NPZ"):
+        require_motion(task_config("H5"))
 
 
 def test_standing_commands_are_zero():

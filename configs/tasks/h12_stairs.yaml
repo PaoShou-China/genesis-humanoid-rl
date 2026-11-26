@@ -1,0 +1,21 @@
+task: H12
+robot: g1_29dof
+episode_length_s: 8.0
+action_scale: 0.5
+action_clip: 1.0
+commands:
+  lin_vel_x:
+  - 0.3
+  - 0.5
+  lin_vel_y:
+  - 0.0
+  - 0.0
+  ang_vel_z:
+  - 0.0
+  - 0.0
+rewards: {}
+success:
+  max_mean_linear_error_m_s: 0.3
+  max_mean_yaw_error_rad_s: 0.3
+  min_travel_m: 1.8
+terrain: stairs
