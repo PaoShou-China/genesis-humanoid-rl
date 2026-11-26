@@ -1,0 +1,6 @@
+name: g1_12dof
+status: blocked_external_asset_unverified
+expected_actuated_joints: 12
+source: https://github.com/axiboai/axibo_rl_challenge
+reason: Repository contains specifications only; external asset pack has not been validated.
+supported: false

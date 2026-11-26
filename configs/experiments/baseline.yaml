@@ -1,0 +1,13 @@
+description: Preregistered five-seed nominal PPO protocol; not completed experiments.
+tasks: [H1, H2]
+train_seeds: [0, 1, 2, 3, 4]
+validation_seeds: [100, 101, 102]
+test_seeds: [1000, 1001, 1002, 1003, 1004]
+episodes_per_test_seed: 64
+num_envs: 4096
+physics_dt_s: 0.02
+physics_substeps: 2
+control_decimation: 1
+pushes: false
+domain_randomization: false
+ood_status: deferred_to_v0.2
