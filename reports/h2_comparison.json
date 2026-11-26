@@ -1,0 +1,20 @@
+{
+  "runs": [
+    {
+      "run": "outputs/h2_smoke_eval8",
+      "checkpoint": "a1655118e2ad5e8b705f729b1b5b6351c29aa971f8bb28b9b36a8a203e93a488",
+      "success_rate": 0,
+      "fall_rate": 1,
+      "linear_error_m_s": 0.8548663184046745
+    },
+    {
+      "run": "outputs/h2_trained_eval",
+      "checkpoint": "e232976189d638b3af3762d934856fd876e0f120fa8da20f2c19341ffe5d03e2",
+      "success_rate": 0,
+      "fall_rate": 1,
+      "linear_error_m_s": 0.6746819950640202
+    }
+  ],
+  "n_runs": 2,
+  "note": "Run rows only. Group by method and independent training seed before statistical inference."
+}

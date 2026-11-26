@@ -41,8 +41,13 @@ def main() -> None:
         from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
         events = EventAccumulator(str(args.training)).Reload()
-        for tag in events.Tags()["scalars"]:
-            if tag in ("Train/mean_reward", "Train/mean_episode_length"):
+        tags = events.Tags()["scalars"]
+        selected = ("Train/mean_reward", "Train/mean_episode_length")
+        if "Train/mean_reward" not in tags:
+            selected = ("Loss/value", "Loss/surrogate")
+            axes[2, 1].set_title("PPO update losses (no completed training episodes)")
+        for tag in tags:
+            if tag in selected:
                 values = events.Scalars(tag)
                 axes[2, 1].plot([v.step for v in values], [v.value for v in values], label=tag)
     for ax in axes.flat:

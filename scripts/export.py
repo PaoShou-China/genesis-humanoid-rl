@@ -5,9 +5,11 @@ from pathlib import Path
 
 
 def main() -> None:
-    """Load the checkpoint with its recorded network configuration, then export."""
-    from algorithms.ppo import make_runner
-    from humanoid.environments import make_env
+    """Export the recorded RSL-RL MLP directly; no physics scene is needed."""
+    import torch
+    from rsl_rl.models import MLPModel
+    from tensordict import TensorDict
+
     from humanoid.provenance import sha256, write_json
 
     parser = argparse.ArgumentParser(description=__doc__)
@@ -17,17 +19,33 @@ def main() -> None:
     args = parser.parse_args()
     task = json.loads((args.checkpoint.parent / "task.json").read_text())
     cfg = json.loads((args.checkpoint.parent / "runner.json").read_text())
-    env = make_env(task["task"], config=task, device=args.device, num_envs=1, evaluation=True)
-    try:
-        runner = make_runner(env, cfg)
-        runner.load(str(args.checkpoint), map_location=str(env.device))
-        args.output.mkdir(parents=True, exist_ok=False)
-        runner.export_policy_to_jit(str(args.output), filename="policy.pt")
-        write_json(args.output / "metadata.json", {"task": task, "checkpoint_sha256": sha256(args.checkpoint),
-                   "action_clip": cfg["clip_actions"], "observation_group": "actor",
-                   "joint_manifest": json.loads((args.checkpoint.parent / "robot.json").read_text())})
-    finally:
-        env.close()
+    torch.set_num_threads(4)
+    actor_cfg = cfg["actor"]
+    if actor_cfg.pop("class_name") != "MLPModel" or cfg["obs_groups"]["actor"] != ["actor"]:
+        parser.error("Exporter currently supports the benchmark's single-group MLP actor only")
+    actor_cfg.pop("cnn_cfg", None)
+    saved = torch.load(args.checkpoint, map_location=args.device, weights_only=False)
+    state = saved["actor_state_dict"]
+    obs_dim = state["mlp.0.weight"].shape[1]
+    robot = json.loads((args.checkpoint.parent / "robot.json").read_text())
+    example = torch.zeros(2, obs_dim, device=args.device)
+    obs = TensorDict({"actor": example}, batch_size=[2])
+    actor = MLPModel(obs, cfg["obs_groups"], "actor", robot["num_joints"], **actor_cfg)
+    actor.to(args.device).load_state_dict(state, strict=True)
+    actor.eval()
+    exported = torch.jit.script(actor.as_jit().cpu())
+    args.output.mkdir(parents=True, exist_ok=False)
+    exported.save(str(args.output / "policy.pt"))
+    # Verify the actual saved artifact, not just the in-memory module.
+    loaded = torch.jit.load(str(args.output / "policy.pt"))
+    with torch.inference_mode():
+        expected = actor(obs).cpu()
+        actual = loaded(example.cpu())
+        torch.testing.assert_close(actual, expected)
+    write_json(args.output / "metadata.json", {"task": task, "checkpoint_sha256": sha256(args.checkpoint),
+               "action_clip": cfg["clip_actions"], "observation_group": "actor",
+               "observation_dim": obs_dim, "roundtrip_max_error": float((actual-expected).abs().max()),
+               "joint_manifest": robot})
 
 
 if __name__ == "__main__":

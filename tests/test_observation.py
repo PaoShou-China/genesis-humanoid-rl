@@ -13,3 +13,4 @@ def test_shapes_and_finiteness(env):
         obs, reward, *_ = env.step(torch.zeros(2, 29))
         assert torch.isfinite(reward).all()
         assert all(torch.isfinite(v).all() for v in obs.values())
+    assert env.scene["feet_contact"].data.in_contact.any()

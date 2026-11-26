@@ -43,7 +43,7 @@ uv pip install --python .venv/bin/python -e '.[test]'
 
 ## 结果与复现边界
 
-短训练模型只能作为可执行性证据；初轮默认站姿控制和2-iteration PPO均在2个完整测试episode中跌倒，成功率0%。不能用奖励日志正常来声称已经学会行走。完整验收状态将记录在 [运行报告](reports/ACCEPTANCE.md)。
+短训练模型只能作为可执行性证据；初轮默认站姿控制和2-iteration PPO均在2个完整测试episode中跌倒，成功率0%。不能用奖励日志正常来声称已经学会行走。H1额外训练200轮、H2额外训练500轮后，分别8个测试episode仍全部跌倒。完整验收状态见 [运行报告](reports/ACCEPTANCE.md)。
 
 每个训练输出解析后的task/runner配置、机器人清单、commit、依赖版本、随机seed和日志。评价另存checkpoint SHA256、原始episode表、trace和视频。resume恢复optimizer和训练进度，重新初始化物理/RNG，不是逐位精确续跑。
 

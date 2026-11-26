@@ -7,7 +7,7 @@ from pathlib import Path
 from algorithms.ppo import make_runner, runner_config
 from humanoid.config import task_config
 from humanoid.environments import make_env
-from humanoid.provenance import system_info, write_json
+from humanoid.provenance import archive_source, system_info, write_json
 from humanoid.robots import validate_robot
 
 
@@ -51,7 +51,7 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=False)
     write_json(out / "task.json", spec)
     write_json(out / "runner.json", cfg)
-    write_json(out / "system.json", system_info())
+    write_json(out / "system.json", system_info() | {"source_snapshot_sha256": archive_source(out)})
     write_json(out / "invocation.json", vars(args) | {"resume": str(args.resume), "output": str(out)})
     env = make_env(args.task, device=args.device, num_envs=args.num_envs, seed=args.seed, config=spec)
     try:

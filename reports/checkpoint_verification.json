@@ -1,0 +1,7 @@
+{
+  "actor_max_abs_weight_change_between_smoke_updates": 0.0010013580322265625,
+  "smoke_common_steps": 16,
+  "resume_common_steps": 24,
+  "optimizer_state_saved": true,
+  "export_roundtrip_max_error": 0.0
+}

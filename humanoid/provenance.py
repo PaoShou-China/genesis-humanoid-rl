@@ -5,6 +5,7 @@ import json
 import platform
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +20,25 @@ def write_json(path: str | Path, value: Any) -> None:
 def sha256(path: str | Path) -> str:
     """Hash a file without loading it all into RAM."""
     with Path(path).open("rb") as stream:
-        return hashlib.file_digest(stream, "sha256").hexdigest()
+        digest = hashlib.sha256()
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+        return digest.hexdigest()
+
+
+def archive_source(output: str | Path) -> str:
+    """Preserve exact source bytes, including uncommitted changes, for each run."""
+    root = Path(__file__).resolve().parents[1]
+    target = Path(output) / "source_snapshot.zip"
+    excluded = {".git", ".venv", "__pycache__", "reports", "outputs", "logs", "third_party",
+                "build", "dist", ".pytest_cache", ".ruff_cache"}
+    with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for source in sorted(root.rglob("*")):
+            relative = source.relative_to(root)
+            if source.is_file() and not excluded.intersection(relative.parts):
+                if source.suffix in (".py", ".yaml", ".toml", ".md") or source.name in ("LICENSE", "NOTICE"):
+                    archive.write(source, relative)
+    return sha256(target)
 
 
 def system_info() -> dict:

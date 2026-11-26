@@ -1,0 +1,3 @@
+run,success_rate,fall_rate,linear_error_m_s
+outputs/h2_smoke_eval8,0.0000,1.0000,0.8549
+outputs/h2_trained_eval,0.0000,1.0000,0.6747

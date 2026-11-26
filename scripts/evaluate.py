@@ -21,6 +21,7 @@ def main() -> None:
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--video", action="store_true")
+    parser.add_argument("--viewer", action="store_true", help="Open the live viewer (requires display)")
     parser.add_argument("--video-frames", type=int, default=200)
     args = parser.parse_args()
     if min(args.episodes, args.num_envs, args.video_frames) < 1:
@@ -43,7 +44,8 @@ def main() -> None:
             parser.error("Task does not match checkpoint")
     args.output.mkdir(parents=True, exist_ok=False)
     env = make_env(args.task, num_envs=min(args.num_envs, args.episodes), seed=args.seed,
-                   device=args.device, evaluation=True, config=spec, video=args.video)
+                   device=args.device, evaluation=True, config=spec, video=args.video,
+                   show_viewer=args.viewer)
     episodes, trace = [], []
     writer = None
     try:
