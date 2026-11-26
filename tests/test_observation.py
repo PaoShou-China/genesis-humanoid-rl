@@ -1,4 +1,5 @@
 """Observation tensor contract verified in actual physics."""
+
 import pytest
 
 

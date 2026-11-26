@@ -1,4 +1,5 @@
 """Asset, floating-base and physical parameter validation."""
+
 import pytest
 
 

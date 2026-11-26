@@ -1,4 +1,5 @@
 """Use upstream RSL-RL through GenesisLab's checkpoint-aware adapter."""
+
 from dataclasses import asdict
 from pathlib import Path
 
@@ -18,6 +19,10 @@ def runner_config(path: str | Path | None = None, *, seed: int = 0) -> dict:
             cfg.actor.hidden_dims = tuple(value)
         elif key == "critic_hidden_dims":
             cfg.critic.hidden_dims = tuple(value)
+        elif key == "init_std":
+            if value <= 0:
+                raise ValueError("init_std must be positive")
+            cfg.actor.distribution_cfg["init_std"] = value
         elif key in ("learning_rate", "entropy_coef", "num_learning_epochs", "num_mini_batches"):
             setattr(cfg.algorithm, key, value)
         elif key in ("num_steps_per_env", "max_iterations", "save_interval", "clip_actions"):

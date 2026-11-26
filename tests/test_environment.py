@@ -1,4 +1,5 @@
 """Check true terminal state and partial reset behavior."""
+
 import pytest
 
 

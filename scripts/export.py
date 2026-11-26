@@ -1,4 +1,5 @@
 """Export an actual trained policy, including observation normalization."""
+
 import argparse
 import json
 from pathlib import Path
@@ -42,10 +43,22 @@ def main() -> None:
         expected = actor(obs).cpu()
         actual = loaded(example.cpu())
         torch.testing.assert_close(actual, expected)
-    write_json(args.output / "metadata.json", {"task": task, "checkpoint_sha256": sha256(args.checkpoint),
-               "action_clip": cfg["clip_actions"], "observation_group": "actor",
-               "observation_dim": obs_dim, "roundtrip_max_error": float((actual-expected).abs().max()),
-               "joint_manifest": robot})
+    write_json(
+        args.output / "metadata.json",
+        {
+            "task": task,
+            "checkpoint_sha256": sha256(args.checkpoint),
+            "export_kind": "raw_actor",
+            "controller": task.get("controller", {}),
+            "shield": task.get("shield", {}),
+            "postprocessing_required": bool(task.get("controller") or task.get("shield")),
+            "action_clip": cfg["clip_actions"],
+            "observation_group": "actor",
+            "observation_dim": obs_dim,
+            "roundtrip_max_error": float((actual - expected).abs().max()),
+            "joint_manifest": robot,
+        },
+    )
 
 
 if __name__ == "__main__":

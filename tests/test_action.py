@@ -1,4 +1,5 @@
 """Verify zero residuals target the actual robot's configured home pose."""
+
 import pytest
 
 

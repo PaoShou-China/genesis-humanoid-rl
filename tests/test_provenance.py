@@ -1,4 +1,5 @@
 """Protect source snapshots from accidentally including weights and transient data."""
+
 import zipfile
 
 from humanoid.provenance import archive_source, sha256

@@ -1,62 +1,76 @@
 # Genesis Humanoid RL Benchmark
 
-基于 **Genesis + GenesisLab + RSL-RL PPO** 的 Unitree G1 人形机器人科研实验工程。
+Unitree G1 的强化学习与控制实验平台：**Genesis · GenesisLab · RSL-RL PPO**。
 
-**当前状态：V0.1 开发版。真实仿真、PPO烟测、模型保存/加载和独立视频评估已运行；尚未证明站立/行走收敛，不能标记 V0.1 验收完成。** 运行结果与失败证据见 [reports](reports/)。
+当前是可运行的开发版。H1/H3默认采用已验证的固定PD标定（刚度×16、阻尼×4，力矩上限不变）；历史低增益配置仍可显式加载。训练、推扰、地形、随机化、动作处理和独立评价共用一条控制链；运动能力以真实完整 episode 验收，接口通过不代表策略收敛。最新结果见 [本轮实测](reports/V2_PROGRESS.md)，历史失败保留在 [初版验收](reports/ACCEPTANCE.md)。
 
-## 已实现
+## 快速运行
 
-- 29 DoF G1，明确关节顺序、限位、PD和effort limit；复用固定版本GenesisLab，不修改上游。
-- H1站立、H2速度跟踪，50 Hz控制；nominal训练不混入随机推扰。
-- RSL-RL PPO训练、TensorBoard、checkpoint、恢复训练、JIT导出。
-- 独立评估：首次完整episode、终止状态采样、成功/跌倒/跟踪误差/机械能/CoM/接触滑移代理指标。
-- 真实三维运动视频、关节/接触/轨迹数据与科学绘图。
-- 参考仓库源码审计、五seed实验协议、真实物理测试。
-
-12 DoF资产、DR、推扰恢复、粗糙地形、安全shield、Residual RL、MBRL与动作模仿尚未验收，见 [路线图](docs/ROADMAP.md)。动作限幅和奖励惩罚不代表形式化安全保证。
-
-## 快速开始
-
-先看 [安装说明](docs/INSTALLATION.md)，新建环境并检查GPU，不修改其他科研项目的依赖。
+先按 [安装说明](docs/INSTALLATION.md) 创建独立环境，不修改其他项目的 PyTorch/CUDA。安装后统一使用 `ghrl`；也可用 `python -m humanoid`。
 
 ```bash
-python scripts/doctor.py
-uv venv --python 3.12 .venv
-uv pip install --python .venv/bin/python 'torch==2.15.0' --index-url https://download.pytorch.org/whl/cpu
-uv pip install --python .venv/bin/python -e '.[test]'
-.venv/bin/pytest -q
+ghrl doctor
+ghrl assets --output outputs/assets.json
+ghrl tasks
 
-# 小规模CPU真实PPO烟测（不代表收敛）
-.venv/bin/python scripts/train.py --task H2 --num-envs 2 --device cpu \
-  --ppo-config configs/algorithms/ppo_smoke.yaml --output outputs/h2_smoke
+# 已校准的 PD 站立参考；zero 表示零姿态残差，并非关闭电机
+ghrl evaluate --task H1 --task-config configs/tasks/h1_stiff_pd.yaml \
+  --agent zero --episodes 8 --num-envs 2 --seed 201 --device cpu \
+  --video --output outputs/pd_standing
 
-# 独立环境执行并录制真实视频
-.venv/bin/python scripts/evaluate.py --task H2 --device cpu --episodes 2 --num-envs 2 \
-  --checkpoint outputs/h2_smoke/model_final.pt --video --output outputs/h2_eval
-
-# 输出物理轨迹和实际训练日志图
-.venv/bin/python scripts/plot.py --evaluation outputs/h2_eval \
-  --training outputs/h2_smoke --output outputs/h2_eval/diagnostics.png
+# 真实 PPO 最小闭环，不用烟测权重宣称行走收敛
+ghrl train --task H2 --num-envs 2 --device cpu \
+  --ppo-config configs/algorithms/ppo_smoke.yaml --output outputs/ppo_smoke
 ```
 
-完整GPU训练：安装与驱动匹配的torch CUDA wheel后，运行 `python scripts/train.py --task H2 --device cuda:0 --num-envs 4096 --seed 0`。本次运行环境没有GPU，GPU吞吐和五seed收敛尚未验证。
+所有输出目录必须不存在，防止覆盖已有实验。`ghrl <命令> --help` 查看完整参数。
 
-## 结果与复现边界
+## 任务与方法
 
-短训练模型只能作为可执行性证据；初轮默认站姿控制和2-iteration PPO均在2个完整测试episode中跌倒，成功率0%。不能用奖励日志正常来声称已经学会行走。H1额外训练200轮、H2额外训练500轮后，分别8个测试episode仍全部跌倒。完整验收状态见 [运行报告](reports/ACCEPTANCE.md)。
+| 任务 | 实现范围 | 验证边界 |
+|---|---|---|
+| H1 Standing | 29 DoF、站立姿态、独立完整 episode 评价 | PD 增益扫描及初始扰动评价；PPO另行验收 |
+| H2 Velocity | vx / vy / wz 指令、PPO训练和评估 | 已执行训练；尚未获得可靠行走基线 |
+| H3 Push recovery | 躯干 CoM 处施加世界系真实外力，记录冲量与恢复 | 没受到推扰的 episode 不计算为恢复成功 |
+| H4 Rough terrain | 上游真实地形、课程、123维 actor 观测 | 真实步进与PPO烟测通过；不宣称地形通过率 |
+| H5 Motion | 真实 NPZ 的频率、关节/刚体命名、形状和四元数校验 | 尚未实现动作跟踪策略，不生成假示教数据 |
 
-每个训练输出解析后的task/runner配置、机器人清单、commit、依赖版本、随机seed和日志。评价另存checkpoint SHA256、原始episode表、trace和视频。resume恢复optimizer和训练进度，重新初始化物理/RNG，不是逐位精确续跑。
+| 对照/方法 | 配置或入口 |
+|---|---|
+| Nominal PPO | `configs/tasks/h2_velocity.yaml` |
+| PPO + DR | `configs/tasks/h2_domain_randomized.yaml`：摩擦、躯干附加质量、PD参数 |
+| Soft safety penalty | `configs/tasks/h2_soft_safety.yaml` |
+| PD target shield | `configs/tasks/h2_shield.yaml`；区间不可行时明确记录 |
+| Residual feedback | `configs/tasks/h1_residual.yaml`；反馈位置目标 + 有界RL残差 |
+| 校准 PD 参考 | `h1_stable_pd.yaml` / `h1_stiff_pd.yaml`；不提高力矩上限 |
+
+Shield 约束的是关节目标和名义 PD 力矩代理，不保证不跌倒，也不构成形式化安全证明。执行器时延、独立惯量随机化、MBRL和全身模仿尚未实现。
+
+## 成组实验
+
+```bash
+# 顺序执行五个训练种子，逐次保存日志、配置、checkpoint、状态和源码快照
+ghrl sweep --task H2 --task-config configs/tasks/h2_domain_randomized.yaml \
+  --seeds 0 1 2 3 4 --device cuda:0 --num-envs 4096 --output outputs/dr_full
+
+# 所有方法用同一份物理测试条件；训练奖励、shield与残差属于方法，不改变配对身份
+ghrl evaluate --task H2 --checkpoint <run>/model_final.pt \
+  --evaluation-config configs/evaluation/nominal.yaml --output outputs/test
+```
+
+`configs/evaluation/shifted.yaml` 提供分布偏移接口；这是开发用配置，正式研究必须另行封存未用于调试的测试集。五seed短烟测与五seed收敛实验严格区分。
+
+## 结果与可视化
+
+每次评价输出 `episodes.json`、`summary.json`、`trace.json`、完整 `commands.json` 和协议/命令序列哈希。终止状态在 reset 前采样，提前跌倒的环境不会贡献第二个 episode。
+
+- `ghrl plot`：质心、姿态、关节、接触、机械功率和真实训练曲线。
+- `ghrl videos`：相同测试条件的视频并排比较；短视频结束后明确标注冻结帧。
+- `ghrl compare`：验证物理协议与命令序列；按独立训练seed汇总，拒绝重复seed伪增样本。
+- `ghrl export`：导出原始actor与归一化；残差/动作过滤需按元数据继续执行。
 
 ## 文档
 
-| 文档 | 内容 |
-|---|---|
-| [参考审计](docs/REFERENCE_PROJECTS.md) | 三个仓库真实代码与版本、可复用接口和差异 |
-| [架构](docs/ARCHITECTURE.md) | 物理、机器人、任务、算法与独立评价 |
-| [机器人配置](configs/robots/g1_29dof.yaml) | 29关节、PD、限位、质量惯量、XML校验和 |
-| [任务](docs/TASKS.md) | H1/H2定义、成功与跌倒判定 |
-| [方法](docs/METHODS.md) | PPO参数与后续方法边界 |
-| [指标](docs/METRICS.md) | 单位、物理定义与统计局限 |
-| [协议](docs/EXPERIMENT_PROTOCOL.md) | 五seed、配对条件、数据划分 |
+[架构](docs/ARCHITECTURE.md) · [源码审计](docs/REFERENCE_PROJECTS.md) · [任务](docs/TASKS.md) · [方法](docs/METHODS.md) · [指标](docs/METRICS.md) · [实验协议](docs/EXPERIMENT_PROTOCOL.md) · [路线图](docs/ROADMAP.md)
 
-原始代码Apache-2.0；第三方依赖和机器人资产保留各自许可证，见 [NOTICE](NOTICE)。未复制许可证不明确的SafeHumanoidsPolicy/AXIBO实现或资产。
+原始代码 Apache-2.0；第三方依赖、策略与机器人资产各自保留原许可证，见 [NOTICE](NOTICE)。未复制授权不明确的参考仓库实现。

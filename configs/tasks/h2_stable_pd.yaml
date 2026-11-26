@@ -1,0 +1,22 @@
+task: H2
+robot: g1_29dof
+episode_length_s: 20.0
+action_scale: 0.5
+action_clip: 1.0
+commands:
+  lin_vel_x:
+  - -1.0
+  - 1.0
+  lin_vel_y:
+  - -0.5
+  - 0.5
+  ang_vel_z:
+  - -0.5
+  - 0.5
+rewards: {}
+success:
+  max_mean_linear_error_m_s: 0.3
+  max_mean_yaw_error_rad_s: 0.3
+pd_gains:
+  stiffness_scale: 8.0
+  damping_scale: 2.8284271247461903

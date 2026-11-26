@@ -1,0 +1,59 @@
+{
+  "runs": [
+    {
+      "run": "outputs/dr_five_seed_smoke/seed0/evaluation",
+      "method": "PPO_DR",
+      "training_seed": 0,
+      "checkpoint": "ef0bfa7afe2319a6c4378f686e8142c9bc37a9896185f3bf4faee72908bed00f",
+      "success_rate": 0,
+      "fall_rate": 1,
+      "linear_error_m_s": 0.4664674997329712
+    },
+    {
+      "run": "outputs/dr_five_seed_smoke/seed1/evaluation",
+      "method": "PPO_DR",
+      "training_seed": 1,
+      "checkpoint": "a838c18959c1d5ca1bb7ecc1cfce5bb05c133302d41b64d2b4bf67e458777f8c",
+      "success_rate": 0,
+      "fall_rate": 1,
+      "linear_error_m_s": 0.5356873422861099
+    },
+    {
+      "run": "outputs/dr_five_seed_smoke/seed2/evaluation",
+      "method": "PPO_DR",
+      "training_seed": 2,
+      "checkpoint": "0bfd190e1a5cf8dc4a41dcc1ff38ca5c49887662c4f7375614194367b74f7d26",
+      "success_rate": 0,
+      "fall_rate": 1,
+      "linear_error_m_s": 0.4821666181087494
+    },
+    {
+      "run": "outputs/dr_five_seed_smoke/seed3/evaluation",
+      "method": "PPO_DR",
+      "training_seed": 3,
+      "checkpoint": "ea5be05c616b7021aa81977bdf2a534d579c2000d0762c91673f3016ad1e9e10",
+      "success_rate": 0,
+      "fall_rate": 1,
+      "linear_error_m_s": 0.5187635272741318
+    },
+    {
+      "run": "outputs/dr_five_seed_smoke/seed4/evaluation",
+      "method": "PPO_DR",
+      "training_seed": 4,
+      "checkpoint": "468a3de6672c9890b195e55e8e78c4c6725501f4bc89323fec211d6718dd66c3",
+      "success_rate": 0,
+      "fall_rate": 1,
+      "linear_error_m_s": 0.5218793749809265
+    }
+  ],
+  "n_runs": 5,
+  "methods": {
+    "PPO_DR": {
+      "n_training_seeds": 5,
+      "mean_success_rate": 0,
+      "median_success_rate": 0,
+      "std_success_rate": 0.0
+    }
+  },
+  "note": "Run rows only. Group by method and independent training seed before statistical inference."
+}

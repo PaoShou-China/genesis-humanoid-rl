@@ -1,7 +1,9 @@
 """Verify the loaded model and export its actual joint ordering."""
+
 import torch
 
 from humanoid.config import ROOT, read_yaml
+from humanoid.native import effective_link_masses
 
 
 def validate_robot(env) -> dict:
@@ -23,31 +25,52 @@ def validate_robot(env) -> dict:
         raise ValueError("Runtime joint ordering differs from the audited asset")
     if env.action_manager.get_term("joint_pos").joint_names != names:
         raise ValueError("Action order differs from robot joint order")
-    expected_limits = torch.tensor([j["position_limits_rad"] for j in expected["joints"]],
-                                   device=limits.device, dtype=limits.dtype)
+    expected_limits = torch.tensor(
+        [j["position_limits_rad"] for j in expected["joints"]],
+        device=limits.device,
+        dtype=limits.dtype,
+    )
     torch.testing.assert_close(limits, expected_limits)
     entity = robot.gs_entity
-    masses = entity.get_links_inertial_mass()
+    masses = effective_link_masses(entity)
     if not torch.isfinite(masses).all() or (masses < 0).any() or masses.sum() <= 0:
         raise ValueError("Invalid link masses")
     dofs = robot.data.indexing.joint_dofs_idx
+
     def first_env(value):
         return value[0] if value.ndim > 1 else value
+
     kp, kd = first_env(entity.get_dofs_kp(dofs)), first_env(entity.get_dofs_kv(dofs))
     for actual, field in ((kp, "kp"), (kd, "kd")):
-        target = torch.tensor([j[field] for j in expected["joints"]],
-                              device=actual.device, dtype=actual.dtype)
-        torch.testing.assert_close(actual, target)
+        target = torch.tensor(
+            [j[field] for j in expected["joints"]], device=actual.device, dtype=actual.dtype
+        )
+        key = "stiffness_scale" if field == "kp" else "damping_scale"
+        target = target * getattr(env, "benchmark_spec", {}).get("pd_gains", {}).get(key, 1.0)
+        randomization = getattr(env, "benchmark_spec", {}).get("randomization", {})
+        if key in randomization:
+            lo, hi = randomization[key]
+            ratio = actual / target
+            if not ((ratio >= lo - 1e-5) & (ratio <= hi + 1e-5)).all():
+                raise ValueError(f"Actual {field} outside configured randomization range")
+        else:
+            torch.testing.assert_close(actual, target)
     feet = list(env.scene["feet_contact"].link_names)
     if set(feet) != {"left_ankle_roll_link", "right_ankle_roll_link"}:
         raise ValueError(f"Unexpected foot contact links: {feet}")
     return {
-        "num_joints": len(names), "joint_names": names,
-        "position_limits_rad": limits.cpu().tolist(), "home_rad": home.cpu().tolist(),
-        "feet": feet, "floating_base": True,
-        "physics_dt_s": env.physics_dt, "control_dt_s": env.step_dt,
-        "quaternion_order": "wxyz", "gravity_m_s2": list(env.cfg.sim.gravity),
-        "kp": kp.cpu().tolist(), "kd": kd.cpu().tolist(),
+        "num_joints": len(names),
+        "joint_names": names,
+        "position_limits_rad": limits.cpu().tolist(),
+        "home_rad": home.cpu().tolist(),
+        "feet": feet,
+        "floating_base": True,
+        "physics_dt_s": env.physics_dt,
+        "control_dt_s": env.step_dt,
+        "quaternion_order": "wxyz",
+        "gravity_m_s2": list(env.cfg.sim.gravity),
+        "kp": kp.cpu().tolist(),
+        "kd": kd.cpu().tolist(),
         "link_masses_kg": first_env(masses).cpu().tolist(),
         "total_mass_kg": float(first_env(masses).sum()),
     }

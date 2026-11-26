@@ -1,4 +1,5 @@
 """Inspect the current environment before installing or upgrading anything."""
+
 import argparse
 import importlib.metadata
 import importlib.util
@@ -21,8 +22,11 @@ def main() -> None:
     if importlib.util.find_spec("torch"):
         import torch
 
-        report.update(cuda_available=torch.cuda.is_available(), cuda_build=torch.version.cuda,
-                      gpu_count=torch.cuda.device_count())
+        report.update(
+            cuda_available=torch.cuda.is_available(),
+            cuda_build=torch.version.cuda,
+            gpu_count=torch.cuda.device_count(),
+        )
     data = json.dumps(report, indent=2)
     print(data)
     if args.output:

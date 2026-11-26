@@ -9,3 +9,7 @@
 命令每4s更新，使用独立NumPy RNG预生成每个batch、每个slot的命令序列；H2每段10%零指令。不同策略即使终止时刻不同，也不会改变其他slot的后续命令序列。比较必须保持task配置、seed、num_envs和episode数一致。训练中的命令采样使用上游实现。
 
 resume恢复网络、optimizer、iteration与common_step_counter，重新初始化物理状态/RNG；不是逐位精确续跑。最终checkpoint额外显式保存。失败与time out同时发生优先记失败。外推H3/H4、DR/OOD、五seed收敛和理论安全证明未完成前，不发布相应性能结论。
+
+## Version-2配对协议
+
+当前manifest以protocol_sha256和command_plan_sha256验证共同物理条件，允许不同reward/controller/shield方法在同一物理测试条件下比较。PD固定增益纳入物理条件身份。schema、初始扰动、推扰暴露和独立训练seed汇总见 [EXTENSIONS.md](EXTENSIONS.md)。101/201/301等种子已用于本轮工程验证，正式研究须另行封存测试集。

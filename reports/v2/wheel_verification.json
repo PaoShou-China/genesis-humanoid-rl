@@ -1,0 +1,12 @@
+{
+  "wheel": "genesis_humanoid_rl-0.1.0.dev1-py3-none-any.whl",
+  "required_paths": [
+    "humanoid/cli.py",
+    "humanoid/runtime.py",
+    "scripts/assets.py",
+    "scripts/evaluate.py",
+    "configs/tasks/h1_stiff_pd.yaml",
+    "configs/evaluation/nominal.yaml"
+  ],
+  "all_present": true
+}

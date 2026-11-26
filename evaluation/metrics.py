@@ -1,5 +1,8 @@
 """Physical state metrics sampled before terminal resets."""
+
 import torch
+
+from humanoid.native import effective_link_masses
 
 
 def measure(env, commands: torch.Tensor) -> dict[str, torch.Tensor]:
@@ -12,11 +15,24 @@ def measure(env, commands: torch.Tensor) -> dict[str, torch.Tensor]:
     origin = data.default_root_state[:, :2] + env.scene.env_origins[:, :2]
     # Native link COM positions, weighted by actual inertial mass; root != CoM.
     entity = robot.gs_entity
-    masses = entity.get_links_inertial_mass()
+    masses = effective_link_masses(entity)
     if masses.ndim == 1:
         masses = masses.unsqueeze(0)
     com = (entity.get_links_pos(ref="link_com") * masses.unsqueeze(-1)).sum(1)
     com = com / masses.sum(-1, keepdim=True)
+    limits = data.joint_pos_limits
+    violation = (
+        ((data.joint_pos < limits[..., 0] - 1e-4) | (data.joint_pos > limits[..., 1] + 1e-4))
+        .float()
+        .mean(-1)
+    )
+    ids = robot.indexing.joint_dofs_idx
+    force_low, force_high = entity.get_dofs_force_range(ids)
+    torque = data.applied_torque
+    torque_violation = ((torque < force_low - 1e-3) | (torque > force_high + 1e-3)).float().mean(-1)
+    projection = getattr(env, "last_projection", None)
+    zeros = torch.zeros(env.num_envs, device=env.device)
+    push = getattr(env, "last_push_force", None)
     return {
         "linear_error_m_s": (data.root_lin_vel_b[:, :2] - commands[:, :2]).norm(dim=-1),
         "yaw_error_rad_s": (data.root_ang_vel_b[:, 2] - commands[:, 2]).abs(),
@@ -29,4 +45,13 @@ def measure(env, commands: torch.Tensor) -> dict[str, torch.Tensor]:
         "com_x_m": com[:, 0] - env.scene.env_origins[:, 0],
         "com_y_m": com[:, 1] - env.scene.env_origins[:, 1],
         "com_z_m": com[:, 2] - env.scene.env_origins[:, 2],
+        "joint_limit_violation": violation,
+        "torque_limit_violation": torque_violation,
+        "action_intervention": projection.intervention.float() if projection else zeros,
+        "shield_intervention": projection.intervention.float()
+        if projection
+        and getattr(env, "benchmark_spec", {}).get("shield", {}).get("type") == "pd_target"
+        else zeros,
+        "shield_infeasible": projection.infeasible.float() if projection else zeros,
+        "external_force_n": push.norm(dim=-1) if push is not None else zeros,
     }

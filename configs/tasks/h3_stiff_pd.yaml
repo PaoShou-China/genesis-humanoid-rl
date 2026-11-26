@@ -1,0 +1,34 @@
+task: H3
+robot: g1_29dof
+episode_length_s: 20.0
+action_scale: 0.5
+action_clip: 1.0
+commands:
+  lin_vel_x:
+  - 0.0
+  - 0.0
+  lin_vel_y:
+  - 0.0
+  - 0.0
+  ang_vel_z:
+  - 0.0
+  - 0.0
+rewards:
+  feet_air_time: 0.0
+  flat_orientation: -2.0
+  joint_deviation: -0.2
+  standing_displacement: -2.0
+  joint_velocity: -0.001
+success:
+  max_tilt_rad: 0.35
+  max_root_displacement_m: 0.25
+push:
+  start_s: 5.0
+  duration_s: 0.1
+  force_n:
+  - 30.0
+  - 0.0
+  - 0.0
+pd_gains:
+  stiffness_scale: 16.0
+  damping_scale: 4.0

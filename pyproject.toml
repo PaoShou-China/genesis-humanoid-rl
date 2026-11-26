@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "genesis-humanoid-rl"
-version = "0.1.0.dev0"
+version = "0.1.0.dev1"
 description = "Reproducible G1 standing and locomotion experiments on GenesisLab"
 requires-python = ">=3.10,<3.14"
 dependencies = [
@@ -19,11 +19,14 @@ dependencies = [
 [project.optional-dependencies]
 test = ["pytest>=8", "ruff>=0.9"]
 
+[project.scripts]
+ghrl = "humanoid.cli:main"
+
 [tool.setuptools.packages.find]
-include = ["humanoid*", "algorithms*", "evaluation*", "visualization*", "configs*"]
+include = ["humanoid*", "algorithms*", "evaluation*", "visualization*", "configs*", "scripts*"]
 
 [tool.setuptools.package-data]
-configs = ["robots/*.yaml", "tasks/*.yaml", "algorithms/*.yaml", "experiments/*.yaml"]
+configs = ["robots/*.yaml", "tasks/*.yaml", "algorithms/*.yaml", "experiments/*.yaml", "evaluation/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

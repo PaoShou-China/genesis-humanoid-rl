@@ -1,4 +1,5 @@
 """Real simulation fixtures (no mocked dynamics)."""
+
 import pytest
 
 

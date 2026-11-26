@@ -1,0 +1,153 @@
+{
+  "n_episodes": 8,
+  "terminated": {
+    "mean": 0.25,
+    "std": 0.4629100498862757,
+    "median": 0.0
+  },
+  "duration_s": {
+    "mean": 15.605,
+    "std": 8.138134219305343,
+    "median": 20.0
+  },
+  "return": {
+    "mean": 17.19842927157879,
+    "std": 10.04857168533826,
+    "median": 22.611454010009766
+  },
+  "mean_linear_error_m_s": {
+    "mean": 0.10450367181329057,
+    "std": 0.16076390785706457,
+    "median": 0.019486863166093826
+  },
+  "mean_yaw_error_rad_s": {
+    "mean": 0.034087216132320464,
+    "std": 0.041106296589320676,
+    "median": 0.013169927056878805
+  },
+  "mean_tilt_rad": {
+    "mean": 0.08983579883351922,
+    "std": 0.08464156486751796,
+    "median": 0.04403388500213623
+  },
+  "mean_root_displacement_m": {
+    "mean": 0.0886898753233254,
+    "std": 0.074538546392087,
+    "median": 0.054118720814585686
+  },
+  "mean_joint_speed_rad_s": {
+    "mean": 0.01745247415965423,
+    "std": 0.020661880456048585,
+    "median": 0.006974470801651478
+  },
+  "mean_power_w": {
+    "mean": 2.878544382750988,
+    "std": 3.3776346123886416,
+    "median": 1.1697930693626404
+  },
+  "mean_slip_speed_m_s": {
+    "mean": 0.012822021584725007,
+    "std": 0.021061099604107406,
+    "median": 0.0014333496801555157
+  },
+  "mean_contact_count": {
+    "mean": 1.995773807168007,
+    "std": 0.00801791474261026,
+    "median": 1.9984999895095825
+  },
+  "mean_com_x_m": {
+    "mean": 0.10873947059735656,
+    "std": 0.06798722022761068,
+    "median": 0.0766698308289051
+  },
+  "mean_com_y_m": {
+    "mean": 0.00980065880867187,
+    "std": 0.019474754155072042,
+    "median": 0.01246737944893539
+  },
+  "mean_com_z_m": {
+    "mean": 0.6614295840263367,
+    "std": 0.007877733117224504,
+    "median": 0.665669173002243
+  },
+  "mean_joint_limit_violation": {
+    "mean": 0.0,
+    "std": 0.0,
+    "median": 0.0
+  },
+  "mean_torque_limit_violation": {
+    "mean": 0.0,
+    "std": 0.0,
+    "median": 0.0
+  },
+  "mean_action_intervention": {
+    "mean": 0.0,
+    "std": 0.0,
+    "median": 0.0
+  },
+  "mean_shield_intervention": {
+    "mean": 0.0,
+    "std": 0.0,
+    "median": 0.0
+  },
+  "mean_shield_infeasible": {
+    "mean": 0.0,
+    "std": 0.0,
+    "median": 0.0
+  },
+  "mean_external_force_n": {
+    "mean": 0.0,
+    "std": 0.0,
+    "median": 0.0
+  },
+  "mean_com_displacement_m": {
+    "mean": 0.0785094719612971,
+    "std": 0.06474373706388221,
+    "median": 0.047521647065877914
+  },
+  "max_tilt_rad": {
+    "mean": 0.3343443716876209,
+    "std": 0.43310203251583623,
+    "median": 0.10857794061303139
+  },
+  "max_root_displacement_m": {
+    "mean": 0.2552519729360938,
+    "std": 0.3189122956218595,
+    "median": 0.09040180966258049
+  },
+  "max_com_displacement_m": {
+    "mean": 0.2244804473593831,
+    "std": 0.27688350050469196,
+    "median": 0.08309940248727798
+  },
+  "energy_j": {
+    "mean": 20.959237694740295,
+    "std": 3.58334904729108,
+    "median": 20.452072143554688
+  },
+  "push_exposed": {
+    "mean": 0,
+    "std": 0.0,
+    "median": 0.0
+  },
+  "impulse_magnitude_ns": {
+    "mean": 0.0,
+    "std": 0.0,
+    "median": 0.0
+  },
+  "recovered": {
+    "mean": 0,
+    "std": 0.0,
+    "median": 0.0
+  },
+  "success": {
+    "mean": 0.75,
+    "std": 0.4629100498862757,
+    "median": 1.0
+  },
+  "success_rate": 0.75,
+  "failure_rate": 0.25,
+  "fall_rate": 0.25,
+  "push_exposure_rate": 0.0,
+  "recovery_rate": null
+}

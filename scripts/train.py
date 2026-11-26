@@ -1,11 +1,12 @@
 """Train or resume actual RSL-RL PPO on GenesisLab H1/H2."""
+
 import argparse
 import json
 from datetime import datetime, timezone
 from pathlib import Path
 
 from algorithms.ppo import make_runner, runner_config
-from humanoid.config import task_config
+from humanoid.config import task_config, TASKS
 from humanoid.environments import make_env
 from humanoid.provenance import archive_source, system_info, write_json
 from humanoid.robots import validate_robot
@@ -14,7 +15,7 @@ from humanoid.robots import validate_robot
 def main() -> None:
     """Create a uniquely named run with resolved configuration and provenance."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--task", choices=["H1", "H2"], default="H2")
+    parser.add_argument("--task", choices=list(TASKS), default="H2")
     parser.add_argument("--task-config")
     parser.add_argument("--ppo-config")
     parser.add_argument("--num-envs", type=int, default=4096)
@@ -52,9 +53,14 @@ def main() -> None:
     write_json(out / "task.json", spec)
     write_json(out / "runner.json", cfg)
     write_json(out / "system.json", system_info() | {"source_snapshot_sha256": archive_source(out)})
-    write_json(out / "invocation.json", vars(args) | {"resume": str(args.resume), "output": str(out)})
-    env = make_env(args.task, device=args.device, num_envs=args.num_envs, seed=args.seed, config=spec)
+    write_json(
+        out / "invocation.json", vars(args) | {"resume": str(args.resume), "output": str(out)}
+    )
+    env = None
     try:
+        env = make_env(
+            args.task, device=args.device, num_envs=args.num_envs, seed=args.seed, config=spec
+        )
         write_json(out / "robot.json", validate_robot(env))
         runner = make_runner(env, cfg, str(out))
         if args.resume:
@@ -62,12 +68,25 @@ def main() -> None:
         runner.learn(num_learning_iterations=cfg["max_iterations"], init_at_random_ep_len=True)
         # Always save an explicit final checkpoint, including optimizer state.
         runner.save(str(out / "model_final.pt"))
-        write_json(out / "status.json", {"training_completed": True,
-            "additional_iterations_requested": cfg["max_iterations"],
-            "convergence_claimed": False, "resume": str(args.resume) if args.resume else None})
+        write_json(
+            out / "status.json",
+            {
+                "training_completed": True,
+                "additional_iterations_requested": cfg["max_iterations"],
+                "convergence_claimed": False,
+                "resume": str(args.resume) if args.resume else None,
+            },
+        )
         print(f"RUN_DIR={out.resolve()}")
+    except BaseException as error:
+        write_json(
+            out / "status.json",
+            {"training_completed": False, "error_type": type(error).__name__, "error": str(error)},
+        )
+        raise
     finally:
-        env.close()
+        if env is not None:
+            env.close()
 
 
 if __name__ == "__main__":

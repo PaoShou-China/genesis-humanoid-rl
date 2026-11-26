@@ -1,4 +1,5 @@
 """Reject unsupported tasks and invalid command ranges before simulation."""
+
 import pytest
 
 from humanoid.config import task_config

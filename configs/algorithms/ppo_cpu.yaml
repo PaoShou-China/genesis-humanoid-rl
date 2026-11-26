@@ -1,0 +1,15 @@
+num_steps_per_env: 24
+max_iterations: 1000
+save_interval: 200
+actor_hidden_dims:
+- 128
+- 64
+critic_hidden_dims:
+- 128
+- 64
+learning_rate: 0.001
+entropy_coef: 0.001
+num_learning_epochs: 3
+num_mini_batches: 4
+clip_actions: 1.0
+init_std: 0.1

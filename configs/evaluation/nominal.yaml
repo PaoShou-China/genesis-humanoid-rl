@@ -1,0 +1,2 @@
+randomization: {}
+reset_joint_range: [-0.1, 0.1]

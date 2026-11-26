@@ -19,3 +19,5 @@
 按episode报告mean/sample std/median；n=1时std=null。五个训练seed的独立结果才适于方法层面的不确定性分析，不能把同一策略的64个episode当成64个独立训练seed。当前compare输出逐run数据，不生成伪统计显著性。
 
 局限：机械能为控制周期末端矩形积分；精细电机能效和接触点真实滑移需更高频记录。计算成本用原始PPO日志的collection/learning时间与system.json；CPU烟测不代表GPU吞吐。
+
+当前另记录关节/控制力矩接口越界比例、动作/Shield干预、投影不可行、实际请求外力与冲量，以及按暴露人群归一的恢复率。CoM质量权重现包含运行时质量偏移。详见 [EXTENSIONS.md](EXTENSIONS.md)。

@@ -63,3 +63,7 @@ done
 ```
 
 训练默认3000 iterations只是起点，是否收敛必须看独立指标。训练和resume异常时保留日志、配置和已保存checkpoint，不能据退出码0以外的猜测标记通过。
+
+## 当前统一入口
+
+重新执行editable安装后提供 `ghrl`，也可使用 `python -m humanoid`。`ghrl assets --output outputs/assets.json` 可在训练前并行预取固定资产并记录哈希。所有子命令通过 `ghrl <command> --help` 查看参数。`ghrl sweep --dry-run` 先检查五seed计划；默认顺序执行，避免多个场景同时编译占满内存。当前流程见README及EXTENSIONS.md。
