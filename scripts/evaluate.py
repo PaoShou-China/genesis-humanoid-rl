@@ -71,6 +71,8 @@ def main() -> None:
             "randomization",
             "push",
             "terrain",
+            "actuator",
+            "timing",
         }
         if set(overrides) - allowed:
             parser.error("Evaluation overrides may change physical conditions only")

@@ -43,12 +43,26 @@ def main() -> None:
         expected = actor(obs).cpu()
         actual = loaded(example.cpu())
         torch.testing.assert_close(actual, expected)
+    contract_available = task.get("terrain", "flat") == "flat"
+    if contract_available:
+        from humanoid.deployment import control_contract
+
+        contract = control_contract(task, robot)
+        if contract["observation_dim"] != obs_dim:
+            raise ValueError("Saved actor does not match the deployment observation contract")
+        contract["policy_sha256"] = sha256(args.output / "policy.pt")
+        write_json(args.output / "contract.json", contract)
     write_json(
         args.output / "metadata.json",
         {
             "task": task,
             "checkpoint_sha256": sha256(args.checkpoint),
             "export_kind": "raw_actor",
+            "control_contract_available": contract_available,
+            "portable_runtime": "humanoid.deployment.PortableController"
+            if contract_available
+            else None,
+            "hardware_validated": False,
             "controller": task.get("controller", {}),
             "shield": task.get("shield", {}),
             "postprocessing_required": bool(task.get("controller") or task.get("shield")),

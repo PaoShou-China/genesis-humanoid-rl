@@ -1,0 +1,274 @@
+{
+  "runs": [
+    {
+      "engine": "genesis",
+      "kp_scale": 8.0,
+      "dt_ms": 2,
+      "delay_ms": 0,
+      "state": "completed",
+      "success_rate": 1
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 8.0,
+      "dt_ms": 2,
+      "delay_ms": 0,
+      "state": "completed",
+      "success_rate": 1.0
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 8.0,
+      "dt_ms": 2,
+      "delay_ms": 10,
+      "state": "completed",
+      "success_rate": 1
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 8.0,
+      "dt_ms": 2,
+      "delay_ms": 10,
+      "state": "completed",
+      "success_rate": 1.0
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 8.0,
+      "dt_ms": 2,
+      "delay_ms": 20,
+      "state": "missing"
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 8.0,
+      "dt_ms": 2,
+      "delay_ms": 20,
+      "state": "missing"
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 8.0,
+      "dt_ms": 5,
+      "delay_ms": 0,
+      "state": "missing"
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 8.0,
+      "dt_ms": 5,
+      "delay_ms": 0,
+      "state": "missing"
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 8.0,
+      "dt_ms": 5,
+      "delay_ms": 10,
+      "state": "missing"
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 8.0,
+      "dt_ms": 5,
+      "delay_ms": 10,
+      "state": "missing"
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 8.0,
+      "dt_ms": 5,
+      "delay_ms": 20,
+      "state": "missing"
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 8.0,
+      "dt_ms": 5,
+      "delay_ms": 20,
+      "state": "missing"
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 8.0,
+      "dt_ms": 10,
+      "delay_ms": 0,
+      "state": "missing"
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 8.0,
+      "dt_ms": 10,
+      "delay_ms": 0,
+      "state": "missing"
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 8.0,
+      "dt_ms": 10,
+      "delay_ms": 10,
+      "state": "missing"
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 8.0,
+      "dt_ms": 10,
+      "delay_ms": 10,
+      "state": "missing"
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 8.0,
+      "dt_ms": 10,
+      "delay_ms": 20,
+      "state": "missing"
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 8.0,
+      "dt_ms": 10,
+      "delay_ms": 20,
+      "state": "missing"
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 16.0,
+      "dt_ms": 2,
+      "delay_ms": 0,
+      "state": "completed",
+      "success_rate": 1
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 16.0,
+      "dt_ms": 2,
+      "delay_ms": 0,
+      "state": "completed",
+      "success_rate": 1.0
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 16.0,
+      "dt_ms": 2,
+      "delay_ms": 10,
+      "state": "completed",
+      "success_rate": 1
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 16.0,
+      "dt_ms": 2,
+      "delay_ms": 10,
+      "state": "completed",
+      "success_rate": 1.0
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 16.0,
+      "dt_ms": 2,
+      "delay_ms": 20,
+      "state": "missing"
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 16.0,
+      "dt_ms": 2,
+      "delay_ms": 20,
+      "state": "missing"
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 16.0,
+      "dt_ms": 5,
+      "delay_ms": 0,
+      "state": "missing"
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 16.0,
+      "dt_ms": 5,
+      "delay_ms": 0,
+      "state": "missing"
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 16.0,
+      "dt_ms": 5,
+      "delay_ms": 10,
+      "state": "missing"
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 16.0,
+      "dt_ms": 5,
+      "delay_ms": 10,
+      "state": "missing"
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 16.0,
+      "dt_ms": 5,
+      "delay_ms": 20,
+      "state": "missing"
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 16.0,
+      "dt_ms": 5,
+      "delay_ms": 20,
+      "state": "missing"
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 16.0,
+      "dt_ms": 10,
+      "delay_ms": 0,
+      "state": "missing"
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 16.0,
+      "dt_ms": 10,
+      "delay_ms": 0,
+      "state": "missing"
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 16.0,
+      "dt_ms": 10,
+      "delay_ms": 10,
+      "state": "missing"
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 16.0,
+      "dt_ms": 10,
+      "delay_ms": 10,
+      "state": "missing"
+    },
+    {
+      "engine": "genesis",
+      "kp_scale": 16.0,
+      "dt_ms": 10,
+      "delay_ms": 20,
+      "state": "missing"
+    },
+    {
+      "engine": "mujoco",
+      "kp_scale": 16.0,
+      "dt_ms": 10,
+      "delay_ms": 20,
+      "state": "missing"
+    }
+  ],
+  "completed": 8,
+  "planned": 36,
+  "empirically_accepted_gain_candidates": [],
+  "criterion": "All planned development cases completed with episode success rate 1.0",
+  "limitations": [
+    "Finite development samples only; not a stability or real-world certificate",
+    "No interpolation between accepted discrete gains",
+    "Constant pose targets do not excite command-transport delay",
+    "Source plan and result directories must be preserved together"
+  ]
+}

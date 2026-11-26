@@ -16,6 +16,9 @@ COMMANDS = {
         "plot",
         "sweep",
         "validate_motion",
+        "sim2sim",
+        "transfer_plan",
+        "transfer_summary",
     )
 }
 COMMANDS.update(

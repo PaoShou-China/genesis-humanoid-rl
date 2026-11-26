@@ -65,30 +65,53 @@ class ActionPipeline:
 
     def __call__(self, action):
         data = self.robot.data
-        ctrl = self.spec.get("controller", {})
-        if ctrl.get("type") == "ankle_feedback":
-            action = ankle_feedback(
-                data.projected_gravity_b,
-                data.root_ang_vel_b,
-                self.robot.joint_names,
+        return process_action(
+            action,
+            spec=self.spec,
+            q=data.joint_pos,
+            dq=data.joint_vel,
+            home=data.default_joint_pos,
+            limits=data.joint_pos_limits,
+            gravity=data.projected_gravity_b,
+            angular_velocity=data.root_ang_vel_b,
+            joint_names=self.robot.joint_names,
+            kp=self.kp,
+            kd=self.kd,
+            effort=self.effort,
+        )
+
+
+def process_action(
+    action, *, spec, q, dq, home, limits, gravity, angular_velocity, joint_names, kp, kd, effort
+):
+    """Shared Genesis/MuJoCo control composition; contains no simulator calls."""
+    ctrl = spec.get("controller", {})
+    if ctrl.get("type") == "ankle_feedback":
+        action = (
+            ankle_feedback(
+                gravity,
+                angular_velocity,
+                joint_names,
                 ctrl,
-                self.spec["action_scale"],
-            ) + (ctrl.get("residual_scale", 1.0) * action)
-        if not torch.isfinite(action).all():
-            raise FloatingPointError("Policy produced a non-finite action")
-        if self.spec.get("shield", {}).get("type") == "pd_target":
-            return project_pd_target(
-                action,
-                q=data.joint_pos,
-                dq=data.joint_vel,
-                home=data.default_joint_pos,
-                limits=data.joint_pos_limits,
-                kp=self.kp,
-                kd=self.kd,
-                effort=self.effort,
-                scale=self.spec["action_scale"],
-                clip=self.spec["action_clip"],
+                spec["action_scale"],
             )
-        applied = action.clamp(-self.spec["action_clip"], self.spec["action_clip"])
-        flags = torch.zeros(self.env.num_envs, dtype=torch.bool, device=self.env.device)
-        return Projection(applied, (applied - action).abs().amax(-1) > 1e-6, flags)
+            + ctrl.get("residual_scale", 1.0) * action
+        )
+    if not torch.isfinite(action).all():
+        raise FloatingPointError("Policy produced a non-finite action")
+    if spec.get("shield", {}).get("type") == "pd_target":
+        return project_pd_target(
+            action,
+            q=q,
+            dq=dq,
+            home=home,
+            limits=limits,
+            kp=kp,
+            kd=kd,
+            effort=effort,
+            scale=spec["action_scale"],
+            clip=spec["action_clip"],
+        )
+    applied = action.clamp(-spec["action_clip"], spec["action_clip"])
+    flags = torch.zeros(action.shape[0], dtype=torch.bool, device=action.device)
+    return Projection(applied, (applied - action).abs().amax(-1) > 1e-6, flags)

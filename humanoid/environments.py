@@ -41,6 +41,25 @@ def make_env_cfg(
                     if isinstance(value, dict)
                     else value * scale,
                 )
+    timing = spec.get("timing", {})
+    cfg.sim.dt = timing.get("physics_dt_s", 0.02)
+    cfg.sim.substeps = timing.get("substeps", 2)
+    cfg.decimation = round(timing.get("control_dt_s", 0.02) / cfg.sim.dt)
+    if spec.get("actor_observation") == "proprioceptive":
+        cfg.observations["actor"].terms.pop("base_lin_vel")
+    if spec.get("actuator", {}).get("mode") == "explicit_pd":
+        from dataclasses import asdict
+        from humanoid.actuators import SampledPdCfg
+
+        actuator_spec = spec["actuator"]
+        cfg.scene.entities["robot"].actuators = tuple(
+            SampledPdCfg(
+                **asdict(actuator),
+                delay_steps=tuple(actuator_spec.get("delay_steps", [0, 0])),
+                no_load_speed_rad_s=actuator_spec.get("no_load_speed_rad_s"),
+            )
+            for actuator in cfg.scene.entities["robot"].actuators
+        )
     # Upstream flat training includes velocity kicks. Nominal PPO must not.
     cfg.events.pop("push_robot", None)
     cfg.events.pop("randomize_friction", None)

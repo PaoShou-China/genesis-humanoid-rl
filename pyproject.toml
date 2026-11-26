@@ -18,6 +18,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=8", "ruff>=0.9"]
+sim2sim = ["mujoco>=3.3,<5"]
 
 [project.scripts]
 ghrl = "humanoid.cli:main"

@@ -33,6 +33,15 @@ def measure(env, commands: torch.Tensor) -> dict[str, torch.Tensor]:
     projection = getattr(env, "last_projection", None)
     zeros = torch.zeros(env.num_envs, device=env.device)
     push = getattr(env, "last_push_force", None)
+    explicit = [a for a in robot.actuators if hasattr(a, "requested_effort")]
+    saturation = (
+        torch.cat(
+            [(a.requested_effort.abs() > a.applied_effort.abs() + 1e-5).float() for a in explicit],
+            -1,
+        ).mean(-1)
+        if explicit
+        else zeros
+    )
     return {
         "linear_error_m_s": (data.root_lin_vel_b[:, :2] - commands[:, :2]).norm(dim=-1),
         "yaw_error_rad_s": (data.root_ang_vel_b[:, 2] - commands[:, 2]).abs(),
@@ -47,6 +56,7 @@ def measure(env, commands: torch.Tensor) -> dict[str, torch.Tensor]:
         "com_z_m": com[:, 2] - env.scene.env_origins[:, 2],
         "joint_limit_violation": violation,
         "torque_limit_violation": torque_violation,
+        "actuator_last_step_saturation": saturation,
         "action_intervention": projection.intervention.float() if projection else zeros,
         "shield_intervention": projection.intervention.float()
         if projection

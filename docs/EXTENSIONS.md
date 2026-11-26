@@ -2,7 +2,7 @@
 
 ## 一条动作链
 
-`humanoid/runtime.py` 继承上游环境，只扩展 step 前的动作处理与外力注入。机器人模型、PD执行器、物理步进、接触与重置仍由固定版本GenesisLab管理，不复制其核心循环。
+`humanoid/runtime.py` 继承上游环境，只扩展 step 前的动作处理与外力注入。机器人模型、物理步进、接触与重置仍由固定版本GenesisLab管理，不复制其核心循环。可选显式执行器使用上游 actuator 扩展接口；scene.step 的薄封装确保多物理步控制周期内持续施加外力，见 [跨引擎迁移](SIM2SIM.md)。
 
 `ActionPipeline` 依次处理：可选的踝关节反馈位置目标、RL残差比例、动作限幅、可选的PD目标区间投影。训练与评价经过同一实现，观测中的last_action记录实际交给上游环境的动作。
 

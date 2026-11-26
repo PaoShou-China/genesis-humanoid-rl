@@ -2,7 +2,7 @@
 
 Unitree G1 的强化学习与控制实验平台：**Genesis · GenesisLab · RSL-RL PPO**。
 
-当前是可运行的开发版。H1/H3默认采用已验证的固定PD标定（刚度×16、阻尼×4，力矩上限不变）；历史低增益配置仍可显式加载。训练、推扰、地形、随机化、动作处理和独立评价共用一条控制链；运动能力以真实完整 episode 验收，接口通过不代表策略收敛。最新结果见 [本轮实测](reports/V2_PROGRESS.md)，历史失败保留在 [初版验收](reports/ACCEPTANCE.md)。
+当前是可运行的开发版。H1/H3默认采用已验证的固定PD标定（刚度×16、阻尼×4，力矩上限不变）；历史低增益配置仍可显式加载。训练、推扰、地形、随机化、动作处理和独立评价共用一条控制链；运动能力以真实完整 episode 验收，接口通过不代表策略收敛。最新接口与跨引擎结果见 [V3 验收](reports/transfer_v3/README.md)，站立标定见 [V2 实测](reports/V2_PROGRESS.md)，历史失败保留在 [初版验收](reports/ACCEPTANCE.md)。
 
 ## 快速运行
 
@@ -44,7 +44,7 @@ ghrl train --task H2 --num-envs 2 --device cpu \
 | Residual feedback | `configs/tasks/h1_residual.yaml`；反馈位置目标 + 有界RL残差 |
 | 校准 PD 参考 | `h1_stable_pd.yaml` / `h1_stiff_pd.yaml`；不提高力矩上限 |
 
-Shield 约束的是关节目标和名义 PD 力矩代理，不保证不跌倒，也不构成形式化安全证明。执行器时延、独立惯量随机化、MBRL和全身模仿尚未实现。
+Shield 约束的是关节目标和名义 PD 力矩代理，不保证不跌倒，也不构成形式化安全证明。新增可选显式 PD、物理步命令延迟、96维本体观测与 MuJoCo 独立评价入口，见 [跨引擎迁移](docs/SIM2SIM.md)。真实执行器辨识、传感时延、独立惯量随机化、MBRL和全身模仿尚未实现。
 
 ## 成组实验
 
@@ -67,10 +67,12 @@ ghrl evaluate --task H2 --checkpoint <run>/model_final.pt \
 - `ghrl plot`：质心、姿态、关节、接触、机械功率和真实训练曲线。
 - `ghrl videos`：相同测试条件的视频并排比较；短视频结束后明确标注冻结帧。
 - `ghrl compare`：验证物理协议与命令序列；按独立训练seed汇总，拒绝重复seed伪增样本。
-- `ghrl export`：导出原始actor与归一化；残差/动作过滤需按元数据继续执行。
+- `ghrl export`：导出原始actor与归一化；平地任务另存控制契约，残差/动作过滤由共用 PortableController 执行。
+- `ghrl sim2sim`：在真实 MuJoCo 中评价显式 PD 或导出策略；不自动调参，不宣称真机迁移。
+- `ghrl transfer_plan`：生成固定控制周期的增益/步长/延迟诊断矩阵；不自动启动长实验。
 
 ## 文档
 
-[架构](docs/ARCHITECTURE.md) · [源码审计](docs/REFERENCE_PROJECTS.md) · [任务](docs/TASKS.md) · [方法](docs/METHODS.md) · [指标](docs/METRICS.md) · [实验协议](docs/EXPERIMENT_PROTOCOL.md) · [路线图](docs/ROADMAP.md)
+[架构](docs/ARCHITECTURE.md) · [源码审计](docs/REFERENCE_PROJECTS.md) · [任务](docs/TASKS.md) · [方法](docs/METHODS.md) · [指标](docs/METRICS.md) · [实验协议](docs/EXPERIMENT_PROTOCOL.md) · [路线图](docs/ROADMAP.md) · [跨引擎与研究方案](docs/SIM2SIM.md)
 
 原始代码 Apache-2.0；第三方依赖、策略与机器人资产各自保留原许可证，见 [NOTICE](NOTICE)。未复制授权不明确的参考仓库实现。

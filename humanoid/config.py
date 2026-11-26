@@ -50,6 +50,9 @@ def validate_task(cfg: dict[str, Any], task: str | None = None) -> dict[str, Any
         "terrain",
         "reward_profile",
         "pd_gains",
+        "actuator",
+        "timing",
+        "actor_observation",
     }
     unknown = set(cfg) - allowed
     if unknown:
@@ -83,6 +86,39 @@ def validate_task(cfg: dict[str, Any], task: str | None = None) -> dict[str, Any
         raise ValueError("Invalid joint reset range")
     if cfg.get("reward_profile") not in (None, "survival", "soft_safety"):
         raise ValueError("Unknown reward profile")
+    if cfg.get("actor_observation", "truth_velocity") not in ("truth_velocity", "proprioceptive"):
+        raise ValueError("Unknown actor observation profile")
+    actuator = cfg.get("actuator", {})
+    if set(actuator) - {"mode", "delay_steps", "no_load_speed_rad_s"}:
+        raise ValueError("Unknown actuator field")
+    mode = actuator.get("mode", "implicit")
+    if mode not in ("implicit", "explicit_pd"):
+        raise ValueError("Unknown actuator mode")
+    delay = actuator.get("delay_steps", [0, 0])
+    if (
+        not isinstance(delay, (list, tuple))
+        or len(delay) != 2
+        or any(type(v) is not int for v in delay)
+        or not 0 <= delay[0] <= delay[1] <= 1000
+    ):
+        raise ValueError("delay_steps must be two ordered integers in [0, 1000]")
+    speed = actuator.get("no_load_speed_rad_s")
+    if speed is not None and (not math.isfinite(speed) or speed <= 0):
+        raise ValueError("no_load_speed_rad_s must be finite and positive")
+    if mode == "implicit" and (delay != [0, 0] and delay != (0, 0) or speed is not None):
+        raise ValueError("Delay and speed envelope require explicit_pd")
+    timing = cfg.get("timing", {})
+    if set(timing) - {"physics_dt_s", "control_dt_s", "substeps"}:
+        raise ValueError("Unknown timing field")
+    physics_dt = timing.get("physics_dt_s", 0.02)
+    control_dt = timing.get("control_dt_s", 0.02)
+    if any(not math.isfinite(v) or v <= 0 for v in (physics_dt, control_dt)):
+        raise ValueError("Timing periods must be finite and positive")
+    ratio = control_dt / physics_dt
+    if ratio < 1 or not math.isclose(ratio, round(ratio), abs_tol=1e-8):
+        raise ValueError("control_dt_s must be an integer multiple of physics_dt_s")
+    if type(timing.get("substeps", 2)) is not int or not 1 <= timing.get("substeps", 2) <= 100:
+        raise ValueError("substeps must be an integer in [1, 100]")
     dr = cfg.get("randomization", {})
     gains = cfg.get("pd_gains", {})
     if set(gains) - {"stiffness_scale", "damping_scale"} or any(

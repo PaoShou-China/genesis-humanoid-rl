@@ -1,0 +1,47 @@
+{
+  "development_only": true,
+  "episodes_per_case": 2,
+  "results": [
+    {
+      "case": "kp16_dt2ms_delay0ms_genesis",
+      "success_rate": 1,
+      "mean_duration_s": 20.0
+    },
+    {
+      "case": "kp16_dt2ms_delay0ms_mujoco",
+      "success_rate": 1.0,
+      "mean_duration_s": 19.999999999999794
+    },
+    {
+      "case": "kp16_dt2ms_delay10ms_genesis",
+      "success_rate": 1,
+      "mean_duration_s": 20.0
+    },
+    {
+      "case": "kp16_dt2ms_delay10ms_mujoco",
+      "success_rate": 1.0,
+      "mean_duration_s": 19.999999999999794
+    },
+    {
+      "case": "kp8_dt2ms_delay0ms_genesis",
+      "success_rate": 1,
+      "mean_duration_s": 20.0
+    },
+    {
+      "case": "kp8_dt2ms_delay0ms_mujoco",
+      "success_rate": 1.0,
+      "mean_duration_s": 19.999999999999794
+    },
+    {
+      "case": "kp8_dt2ms_delay10ms_genesis",
+      "success_rate": 1,
+      "mean_duration_s": 20.0
+    },
+    {
+      "case": "kp8_dt2ms_delay10ms_mujoco",
+      "success_rate": 1.0,
+      "mean_duration_s": 19.999999999999794
+    }
+  ],
+  "hardware_validated": false
+}
